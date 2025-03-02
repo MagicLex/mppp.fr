@@ -1,0 +1,12 @@
+This file is a placeholder to ensure the images directory structure is preserved in version control.
+You can delete this file once you've added actual images.
+
+To add images:
+1. Add your logo to /images/logos/
+2. Add menu item photos to /images/menu/
+3. Add UI elements to /images/ui/
+
+Example image paths:
+- /images/logos/main-logo.png
+- /images/menu/poulet-entier.jpg
+- /images/ui/hero-background.jpg

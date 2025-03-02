@@ -1,0 +1,65 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html {
+    font-family: 'Poppins', system-ui, sans-serif;
+  }
+
+  h1, h2, h3, .cartoon-font {
+    font-family: 'Lilita One', cursive;
+    letter-spacing: 0.02em;
+  }
+}
+
+/* Cartoon-style button */
+.btn-cartoon {
+  @apply relative overflow-hidden transition-transform hover:scale-105 border-4 border-black;
+  box-shadow: 4px 4px 0 #000;
+}
+
+.btn-cartoon:active {
+  transform: translate(4px, 4px);
+  box-shadow: 0 0 0 #000;
+}
+
+/* Cartoon card style */
+.card-cartoon {
+  @apply relative bg-white rounded-3xl border-4 border-black;
+  box-shadow: 8px 8px 0 #000;
+}
+
+/* Price tag style */
+.price-tag {
+  @apply relative px-4 py-2 bg-amber-400 text-white font-bold rounded-full border-4 border-black;
+}
+
+/* Leaflet Map Styles */
+.leaflet-container {
+  width: 100%;
+  height: 100%;
+  z-index: 1;
+  @apply rounded-3xl border-4 border-black;
+  box-shadow: 8px 8px 0 #000;
+}
+
+.leaflet-popup-content-wrapper {
+  @apply rounded-2xl border-2 border-black !important;
+  box-shadow: 4px 4px 0 #000 !important;
+}
+
+.leaflet-popup-content {
+  margin: 0.75rem !important;
+  min-width: 200px;
+}
+
+.leaflet-popup-tip-container {
+  display: none !important;
+}
+
+/* Fix map tiles loading */
+.leaflet-tile-container img {
+  width: 256px !important;
+  height: 256px !important;
+}
