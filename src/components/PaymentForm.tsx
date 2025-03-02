@@ -4,6 +4,7 @@ import { createPaymentIntent } from '../services/stripe';
 import { createOrUpdateContact, createDealForContact } from '../services/hubspot';
 import { useCart } from '../context/CartContext';
 import toast from 'react-hot-toast';
+import { trackPurchase } from '../services/analytics';
 
 interface PaymentFormProps {
   orderDetails: {
@@ -74,6 +75,21 @@ export default function PaymentForm({ orderDetails, onSuccess }: PaymentFormProp
         orderDetails.email,
         total,
         `Commande: ${orderSummary}. Heure de retrait: ${orderDetails.pickupTime}`
+      );
+
+      // Generate a transaction ID for analytics
+      const transactionId = `order_${Date.now()}`;
+      
+      // Track purchase event
+      trackPurchase(
+        transactionId,
+        total,
+        items.map(item => ({
+          productId: item.product.id,
+          productName: item.product.name,
+          price: item.product.price + (item.options ? item.options.reduce((sum, opt) => sum + opt.price, 0) : 0),
+          quantity: item.quantity
+        }))
       );
 
       // Simulate payment confirmation

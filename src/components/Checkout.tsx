@@ -5,6 +5,7 @@ import { getStripe } from '../services/stripe';
 import { useCart } from '../context/CartContext';
 import PaymentForm from './PaymentForm';
 import toast from 'react-hot-toast';
+import { trackBeginCheckout } from '../services/analytics';
 
 export default function Checkout() {
   const navigate = useNavigate();
@@ -25,6 +26,17 @@ export default function Checkout() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setShowPaymentForm(true);
+    
+    // Track begin checkout event
+    trackBeginCheckout(
+      items.map(item => ({
+        productId: item.product.id,
+        productName: item.product.name,
+        price: item.product.price + (item.options ? item.options.reduce((sum, opt) => sum + opt.price, 0) : 0),
+        quantity: item.quantity
+      })),
+      total
+    );
   };
 
   const handlePaymentSuccess = () => {

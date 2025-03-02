@@ -5,6 +5,7 @@ import { Plus, Flame, ShoppingBag } from 'lucide-react';
 import toast from 'react-hot-toast';
 import LocationMap from './LocationMap';
 import { useNavigate } from 'react-router-dom';
+import { trackAddToCart } from '../services/analytics';
 
 export default function Menu() {
   const { addItem } = useCart();
@@ -14,6 +15,15 @@ export default function Menu() {
     const product = products.find(p => p.id === productId);
     if (product) {
       addItem(product);
+      
+      // Track add to cart event
+      trackAddToCart(
+        product.id,
+        product.name,
+        product.price,
+        1
+      );
+      
       toast.success('Produit ajouté au panier', {
         icon: '🍗',
         duration: 2000,
