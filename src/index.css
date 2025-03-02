@@ -26,7 +26,7 @@
 
 /* Cartoon card style */
 .card-cartoon {
-  @apply relative bg-white rounded-3xl border-4 border-black;
+  @apply relative bg-white rounded-3xl border-4 border-black overflow-hidden;
   box-shadow: 8px 8px 0 #000;
 }
 

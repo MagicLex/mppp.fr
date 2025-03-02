@@ -67,14 +67,18 @@ export default function Menu() {
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-6xl mx-auto">
           {products.map((product) => (
-            <div key={product.id} className="card-cartoon">
-              <div className="aspect-w-16 aspect-h-9 relative">
+            <div key={product.id} className="overflow-hidden card-cartoon">
+              <div className="relative">
                 <img 
                   src={product.image} 
                   alt={product.name}
-                  className="w-full h-48 object-cover rounded-t-[1.5rem]"
+                  className="w-full h-48 object-cover"
+                  style={{ borderTopLeftRadius: 'calc(1.5rem - 4px)', borderTopRightRadius: 'calc(1.5rem - 4px)' }}
                 />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent rounded-t-[1.5rem]" />
+                <div 
+                  className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent" 
+                  style={{ borderTopLeftRadius: 'calc(1.5rem - 4px)', borderTopRightRadius: 'calc(1.5rem - 4px)' }}
+                />
               </div>
               <div className="p-6">
                 <div className="flex justify-between items-start mb-4">
