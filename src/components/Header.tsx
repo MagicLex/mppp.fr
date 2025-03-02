@@ -14,15 +14,7 @@ export default function Header() {
           {/* Top Navigation */}
           <div className="flex items-center justify-between py-4">
             <Link to="/" className="flex items-center space-x-3">
-              {/* Logo can be replaced with an actual image */}
-              <div className="bg-white p-2 rounded-full border-4 border-black">
-                {/* Replace this with your actual logo when available */}
-                <ChefHat size={32} className="text-black" />
-                {/* Uncomment when you have a logo:
-                <img src="/images/logos/main-logo.png" alt="Mon P'tit Poulet" className="w-10 h-10" />
-                */}
-              </div>
-              <h1 className="text-3xl font-cartoon text-black">Mon P'tit Poulet</h1>
+                <img src="/public/images/logos/logo_mpp.png" alt="Mon P'tit Poulet" className="w-10 h-10" />
             </Link>
             <Link to="/panier" className="relative">
               <div className="bg-white p-2 rounded-full border-4 border-black">
@@ -57,18 +49,7 @@ export default function Header() {
               </div>
             </div>
             <div className="hidden md:block md:flex-1">
-              <div className="w-96 h-96 mx-auto bg-white rounded-full flex items-center justify-center border-8 border-black">
-                <div className="w-80 h-80 bg-amber-200 rounded-full flex items-center justify-center border-8 border-black">
-                  {/* Replace this with your mascot image when available */}
-                  <div className="text-center text-black">
-                    {/* Uncomment when you have a mascot image:
-                    <img src="/images/logos/mascot.png" alt="Mascotte" className="w-64 h-64" />
-                    */}
-                    <ChefHat size={80} className="mx-auto mb-4" />
-                    <p className="text-lg font-cartoon">Mascotte à venir</p>
-                  </div>
-                </div>
-              </div>
+              <img src="public/images/logos/mascotte.png" alt="Mascotte" className="w-64 h-64" />
             </div>
           </div>
         </div>
