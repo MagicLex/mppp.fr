@@ -1,18 +1,57 @@
 import React from 'react';
 import { products } from '../data/products';
 import { useCart } from '../context/CartContext';
-import { Plus, Flame } from 'lucide-react';
+import { Plus, Flame, ShoppingBag } from 'lucide-react';
 import toast from 'react-hot-toast';
 import LocationMap from './LocationMap';
+import { useNavigate } from 'react-router-dom';
 
 export default function Menu() {
   const { addItem } = useCart();
+  const navigate = useNavigate();
 
   const handleAddToCart = (productId: string) => {
     const product = products.find(p => p.id === productId);
     if (product) {
       addItem(product);
-      toast.success('Produit ajouté au panier');
+      toast.success('Produit ajouté au panier', {
+        icon: '🍗',
+        duration: 2000,
+      });
+      
+      // Show a toast with action button
+      toast((t) => (
+        <div className="flex flex-col">
+          <span className="mb-2">Voulez-vous ajouter des options?</span>
+          <div className="flex gap-2">
+            <button
+              onClick={() => {
+                toast.dismiss(t.id);
+                navigate('/panier');
+              }}
+              className="px-3 py-1 bg-amber-400 text-white rounded-md text-sm font-medium"
+            >
+              Oui, aller au panier
+            </button>
+            <button
+              onClick={() => toast.dismiss(t.id)}
+              className="px-3 py-1 bg-gray-200 rounded-md text-sm font-medium"
+            >
+              Non, continuer
+            </button>
+          </div>
+        </div>
+      ), {
+        duration: 5000,
+        style: {
+          padding: '16px',
+          borderRadius: '10px',
+          background: '#fff',
+          color: '#333',
+          boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)',
+          border: '4px solid #000',
+        },
+      });
     }
   };
 
@@ -52,11 +91,12 @@ export default function Menu() {
                     {product.price.toFixed(2)}€
                   </span>
                 </div>
+                
                 <button
                   onClick={() => handleAddToCart(product.id)}
                   className="btn-cartoon w-full bg-amber-400 text-white py-4 px-6 rounded-2xl flex items-center justify-center space-x-3 text-lg font-cartoon"
                 >
-                  <Plus size={24} className="transition-transform group-hover:rotate-90" />
+                  <ShoppingBag size={24} />
                   <span>Ajouter au panier</span>
                 </button>
               </div>

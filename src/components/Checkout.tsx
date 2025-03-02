@@ -110,7 +110,30 @@ export default function Checkout() {
             </select>
           </div>
 
+          {/* Order Summary */}
           <div className="pt-6 border-t-4 border-black">
+            <h3 className="text-xl font-cartoon text-amber-900 mb-4">Récapitulatif de la commande</h3>
+            <div className="space-y-2 mb-4">
+              {items.map((item) => (
+                <div key={item.product.id} className="flex justify-between">
+                  <div>
+                    <span className="font-medium">{item.quantity}x {item.product.name}</span>
+                    {item.options && item.options.length > 0 && (
+                      <ul className="text-sm text-gray-600 ml-4">
+                        {item.options.map(option => (
+                          <li key={option.id}>+ {option.name}</li>
+                        ))}
+                      </ul>
+                    )}
+                  </div>
+                  <span>
+                    {((item.product.price + 
+                      (item.options ? item.options.reduce((sum, opt) => sum + opt.price, 0) : 0)) * 
+                      item.quantity).toFixed(2)}€
+                  </span>
+                </div>
+              ))}
+            </div>
             <div className="flex justify-between items-center text-xl font-cartoon mb-6">
               <span>Total à payer</span>
               <span className="price-tag">{total.toFixed(2)}€</span>

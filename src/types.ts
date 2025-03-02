@@ -9,6 +9,14 @@ export interface Product {
 export interface CartItem {
   product: Product;
   quantity: number;
+  options?: OrderOption[];
+}
+
+export interface OrderOption {
+  id: string;
+  name: string;
+  price: number;
+  type: 'drink' | 'sauce' | 'side' | 'extra';
 }
 
 export interface OrderDetails {
