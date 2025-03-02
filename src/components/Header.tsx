@@ -14,7 +14,7 @@ export default function Header() {
           {/* Top Navigation */}
           <div className="flex items-center justify-between py-4">
             <Link to="/" className="flex items-center space-x-3">
-                <img src="/public/images/logos/logo_mpp.png" alt="Mon P'tit Poulet" className="w-10 h-10" />
+                <img src="/images/logos/logo_mpp.png" alt="Mon P'tit Poulet" className="w-10 h-10" />
             </Link>
             <Link to="/panier" className="relative">
               <div className="bg-white p-2 rounded-full border-4 border-black">
@@ -49,7 +49,7 @@ export default function Header() {
               </div>
             </div>
             <div className="hidden md:block md:flex-1">
-              <img src="public/images/logos/mascotte.png" alt="Mascotte" className="w-64 h-64" />
+              <img src="/images/logos/mascotte.png" alt="Mascotte" className="w-64 h-64" />
             </div>
           </div>
         </div>
