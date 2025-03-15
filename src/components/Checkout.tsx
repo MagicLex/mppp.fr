@@ -1,7 +1,5 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Elements } from '@stripe/react-stripe-js';
-import { getStripe } from '../services/stripe';
 import { useCart } from '../context/CartContext';
 import PaymentForm from './PaymentForm';
 import toast from 'react-hot-toast';
@@ -170,12 +168,10 @@ export default function Checkout() {
               <p><strong>Heure de retrait:</strong> {orderDetails.pickupTime}</p>
             </div>
             
-            <Elements stripe={getStripe()}>
-              <PaymentForm 
-                orderDetails={orderDetails}
-                onSuccess={handlePaymentSuccess}
-              />
-            </Elements>
+            <PaymentForm 
+              orderDetails={orderDetails}
+              onSuccess={handlePaymentSuccess}
+            />
           </div>
         </div>
       )}

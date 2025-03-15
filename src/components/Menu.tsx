@@ -1,18 +1,44 @@
-import React from 'react';
-import { products } from '../data/products';
+import React, { useState, useEffect } from 'react';
 import { useCart } from '../context/CartContext';
 import { Plus, Flame, ShoppingBag } from 'lucide-react';
 import toast from 'react-hot-toast';
 import LocationMap from './LocationMap';
 import { useNavigate } from 'react-router-dom';
 import { trackAddToCart } from '../services/analytics';
+// Choose which service to use:
+// import { getAllProducts, getHomePageProducts } from '../services/menuService'; // JSON version
+import { getAllProducts, getHomePageProducts, getProductsByCategory, getFeaturedProducts } from '../services/csvMenuService'; // CSV version
+import { Product } from '../types';
 
 export default function Menu() {
   const { addItem } = useCart();
   const navigate = useNavigate();
+  const [menuProducts, setMenuProducts] = useState<Product[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    // Load products from the menu service
+    const loadProducts = async () => {
+      try {
+        // You can use different methods depending on what you want to display:
+        // - getAllProducts(): all products
+        // - getHomePageProducts(): products marked for display on home page
+        // - getProductsByCategory('main'): only main dishes
+        // - getFeaturedProducts(): products marked as featured
+        const products = await getFeaturedProducts();
+        setMenuProducts(products);
+      } catch (error) {
+        console.error('Error loading products:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadProducts();
+  }, []);
 
   const handleAddToCart = (productId: string) => {
-    const product = products.find(p => p.id === productId);
+    const product = menuProducts.find(p => p.id === productId);
     if (product) {
       addItem(product);
       
@@ -75,8 +101,16 @@ export default function Menu() {
           </p>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-6xl mx-auto">
-          {products.map((product) => (
+        {loading ? (
+          <div className="flex justify-center items-center py-12">
+            <div className="text-center">
+              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-amber-500 mx-auto mb-4"></div>
+              <p>Chargement du menu...</p>
+            </div>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-6xl mx-auto">
+            {menuProducts.map((product) => (
             <div key={product.id} className="overflow-hidden card-cartoon">
               <div className="relative">
                 <img 
@@ -99,7 +133,7 @@ export default function Menu() {
                         <Flame size={24} className="text-amber-500" />
                       )}
                     </h3>
-                    <p className="text-gray-600 mt-1">{product.description}</p>
+                    <p className="text-gray-600 mt-1 line-clamp-3">{product.description}</p>
                   </div>
                   <span className="price-tag">
                     {product.price.toFixed(2)}€
@@ -115,8 +149,9 @@ export default function Menu() {
                 </button>
               </div>
             </div>
-          ))}
-        </div>
+            ))}
+          </div>
+        )}
       </div>
 
       <div className="max-w-6xl mx-auto">

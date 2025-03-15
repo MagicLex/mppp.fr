@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { CardElement, useStripe, useElements } from '@stripe/react-stripe-js';
-import { createPaymentIntent } from '../services/stripe';
+import { createPayment, confirmPayment } from '../services/zettle';
 import { createOrUpdateContact, createDealForContact } from '../services/hubspot';
 import { useCart } from '../context/CartContext';
 import toast from 'react-hot-toast';
@@ -17,39 +16,37 @@ interface PaymentFormProps {
 }
 
 export default function PaymentForm({ orderDetails, onSuccess }: PaymentFormProps) {
-  const stripe = useStripe();
-  const elements = useElements();
   const { total, items, clearCart } = useCart();
   const [isProcessing, setIsProcessing] = useState(false);
-  const [clientSecret, setClientSecret] = useState('');
-  const [paymentIntentId, setPaymentIntentId] = useState('');
+  const [paymentId, setPaymentId] = useState('');
+  const [cardDetails, setCardDetails] = useState({
+    cardNumber: '',
+    expiryDate: '',
+    cvv: ''
+  });
 
   useEffect(() => {
-    const getPaymentIntent = async () => {
+    const initializePayment = async () => {
       try {
-        const { clientSecret, id } = await createPaymentIntent(total * 100); // amount in cents
-        setClientSecret(clientSecret);
-        setPaymentIntentId(id);
+        if (total > 0) {
+          const { paymentId: newPaymentId } = await createPayment(total * 100); // amount in cents
+          setPaymentId(newPaymentId);
+        }
       } catch (error) {
-        console.error('Error creating payment intent:', error);
+        console.error('Error initializing Zettle payment:', error);
         toast.error('Erreur lors de la préparation du paiement');
       }
     };
 
-    if (total > 0) {
-      getPaymentIntent();
-    }
+    initializePayment();
   }, [total]);
 
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
 
-    if (!stripe || !elements) {
-      return;
-    }
-
-    const cardElement = elements.getElement(CardElement);
-    if (!cardElement) {
+    // Validate card details
+    if (!cardDetails.cardNumber || !cardDetails.expiryDate || !cardDetails.cvv) {
+      toast.error('Veuillez saisir tous les détails de votre carte');
       return;
     }
 
@@ -64,8 +61,16 @@ export default function PaymentForm({ orderDetails, onSuccess }: PaymentFormProp
         lastorder: new Date().toISOString()
       });
 
-      // In a real app, this would be confirmed by your backend
-      // For demo, we'll simulate a successful payment
+      // Confirm payment with Zettle
+      // In a real app, this would send the card details securely to your backend
+      // Your backend would then use Zettle API to process the payment
+      const { success, transactionId } = await confirmPayment(paymentId);
+      
+      if (!success) {
+        throw new Error('Payment confirmation failed');
+      }
+
+      // Create order summary
       const orderSummary = items.map(item => 
         `${item.quantity}x ${item.product.name}`
       ).join(', ');
@@ -76,9 +81,6 @@ export default function PaymentForm({ orderDetails, onSuccess }: PaymentFormProp
         total,
         `Commande: ${orderSummary}. Heure de retrait: ${orderDetails.pickupTime}`
       );
-
-      // Generate a transaction ID for analytics
-      const transactionId = `order_${Date.now()}`;
       
       // Track purchase event
       trackPurchase(
@@ -92,45 +94,87 @@ export default function PaymentForm({ orderDetails, onSuccess }: PaymentFormProp
         }))
       );
 
-      // Simulate payment confirmation
-      // In a real app, you would use stripe.confirmCardPayment with the clientSecret
-      setTimeout(() => {
-        clearCart();
-        onSuccess();
-        toast.success('Paiement réussi! Votre commande est confirmée.');
-        setIsProcessing(false);
-      }, 2000);
+      // Handle successful payment
+      clearCart();
+      onSuccess();
+      toast.success('Paiement réussi! Votre commande est confirmée.');
     } catch (error) {
       console.error('Payment error:', error);
       toast.error('Erreur lors du paiement. Veuillez réessayer.');
+    } finally {
       setIsProcessing(false);
     }
   };
 
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    setCardDetails(prev => ({
+      ...prev,
+      [name]: value
+    }));
+  };
+
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
-      <div className="p-4 border-4 border-black rounded-2xl bg-white">
-        <CardElement
-          options={{
-            style: {
-              base: {
-                fontSize: '16px',
-                color: '#424770',
-                '::placeholder': {
-                  color: '#aab7c4',
-                },
-              },
-              invalid: {
-                color: '#9e2146',
-              },
-            },
-          }}
-        />
+      <div className="p-4 border-4 border-black rounded-2xl bg-white space-y-4">
+        <div>
+          <label htmlFor="cardNumber" className="block text-sm font-medium text-gray-700 mb-1">
+            Numéro de carte
+          </label>
+          <input
+            id="cardNumber"
+            name="cardNumber"
+            type="text"
+            placeholder="1234 5678 9012 3456"
+            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500"
+            value={cardDetails.cardNumber}
+            onChange={handleInputChange}
+            maxLength={19}
+          />
+        </div>
+        
+        <div className="flex space-x-4">
+          <div className="flex-1">
+            <label htmlFor="expiryDate" className="block text-sm font-medium text-gray-700 mb-1">
+              Date d'expiration
+            </label>
+            <input
+              id="expiryDate"
+              name="expiryDate"
+              type="text"
+              placeholder="MM/AA"
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500"
+              value={cardDetails.expiryDate}
+              onChange={handleInputChange}
+              maxLength={5}
+            />
+          </div>
+          
+          <div className="w-1/3">
+            <label htmlFor="cvv" className="block text-sm font-medium text-gray-700 mb-1">
+              CVV
+            </label>
+            <input
+              id="cvv"
+              name="cvv"
+              type="text"
+              placeholder="123"
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500"
+              value={cardDetails.cvv}
+              onChange={handleInputChange}
+              maxLength={4}
+            />
+          </div>
+        </div>
+
+        <div className="flex items-center pt-2">
+          <span className="text-sm text-gray-500">Paiement sécurisé</span>
+        </div>
       </div>
       
       <button
         type="submit"
-        disabled={!stripe || isProcessing}
+        disabled={isProcessing}
         className={`w-full btn-cartoon bg-amber-400 text-white py-3 px-4 rounded-2xl font-cartoon text-lg ${
           isProcessing ? 'opacity-70 cursor-not-allowed' : 'hover:bg-amber-500'
         }`}

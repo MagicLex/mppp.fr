@@ -1,0 +1,15 @@
+type,id,name,description,price,image,category,displayOnHome,featured
+product,poulet-entier,Poulet Entier,"Poulet portugais grillé au charbon de bois avec sauce Piri Piri",22.90,/images/menu/poulet.webp,main,true,true
+product,demi-poulet,1/2 Poulet,"Demi poulet portugais grillé avec sauce Piri Piri",12.90,/images/menu/poulet.webp,main,true,false
+product,quart-poulet,1/4 Poulet,"Quart de poulet portugais grillé avec sauce Piri Piri",7.90,/images/menu/poulet.webp,main,true,false
+product,pommes-terre,Pommes de Terre,"Pommes de terre rôties aux herbes",4.90,/images/menu/pomme-de-terre.jpg,side,true,false
+option,coca-cola,Coca-Cola,,2.50,,drink,false,false
+option,sprite,Sprite,,2.50,,drink,false,false
+option,fanta,Fanta Orange,,2.50,,drink,false,false
+option,water,Eau Minérale,,1.50,,drink,false,false
+option,sumol,Sumol (Ananas),,2.90,,drink,false,false
+option,piri-piri-extra,Sauce Piri Piri (Extra Piquante),,1.00,,sauce,false,false
+option,piri-piri-mild,Sauce Piri Piri (Douce),,1.00,,sauce,false,false
+option,aioli,Aïoli,,1.00,,sauce,false,false
+option,salade,Salade Verte,,3.50,,side,false,false
+option,riz,Riz Portugais,,3.50,,side,false,false

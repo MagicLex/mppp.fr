@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { BrowserRouter, Routes, Route, useLocation } from 'react-router-dom';
 import { Toaster } from 'react-hot-toast';
 import Header from './components/Header';
@@ -25,6 +25,23 @@ function AnalyticsTracker() {
 }
 
 function App() {
+  // Always show splash - no state needed for a permanent lockout
+  const showSplash = true;
+
+  if (showSplash) {
+    return (
+      <div 
+        className="fixed inset-0 flex items-center justify-center bg-[#ffbe34] z-50"
+      >
+        <img 
+          src="/images/flyer.jpg" 
+          alt="Mon P'tit Poulet" 
+          className="max-w-full max-h-full object-contain" 
+        />
+      </div>
+    );
+  }
+
   return (
     <BrowserRouter>
       <CartProvider>

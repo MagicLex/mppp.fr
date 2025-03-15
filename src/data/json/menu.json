@@ -1,0 +1,215 @@
+{
+  "products": [
+    {
+      "id": "poulet-entier",
+      "name": "Poulet Entier",
+      "description": "Poulet portugais grillé au charbon de bois avec sauce Piri Piri. Marinée selon notre recette traditionnelle puis grillée à la perfection sur notre rôtissoire pour vous offrir une saveur authentique.",
+      "price": 22.90,
+      "image": "/images/menu/poulet.webp",
+      "category": "main",
+      "displayOnHome": true,
+      "featured": true
+    },
+    {
+      "id": "demi-poulet",
+      "name": "1/2 Poulet",
+      "description": "Demi poulet portugais grillé avec sauce Piri Piri. Savoureux et juteux avec une peau croustillante, parfait pour une personne affamée.",
+      "price": 12.90,
+      "image": "/images/menu/poulet.webp",
+      "category": "main",
+      "displayOnHome": true,
+      "featured": true
+    },
+    {
+      "id": "quart-poulet",
+      "name": "1/4 Poulet",
+      "description": "Quart de poulet portugais grillé avec sauce Piri Piri. Tendre et savoureux, idéal pour un repas léger mais satisfaisant.",
+      "price": 7.90,
+      "image": "/images/menu/poulet.webp",
+      "category": "main",
+      "displayOnHome": true,
+      "featured": true
+    },
+    {
+      "id": "pommes-terre",
+      "name": "Pommes de Terre",
+      "description": "Pommes de terre rôties aux herbes fraîches. Servies seules, idéales en accompagnement.",
+      "price": 1.90,
+      "image": "/images/menu/pomme-de-terre.jpg",
+      "category": "side",
+      "displayOnHome": true,
+      "featured": true
+    }
+  ],
+  "options": {
+    "drinks": [
+      {
+        "id": "coca-cola",
+        "name": "Coca Cola",
+        "description": "Boisson gazeuse rafraîchissante, servie bien fraîche en canette de 33cl.",
+        "price": 3.00,
+        "type": "drink"
+      },
+      {
+        "id": "coca-cola-zero",
+        "name": "Coca Cola Sans Sucre",
+        "description": "Version sans sucre du célèbre soda, avec le même goût original. Canette de 33cl.",
+        "price": 3.00,
+        "type": "drink"
+      },
+      {
+        "id": "coca-cola-cherry",
+        "name": "Coca Cola Cherry",
+        "description": "Coca-Cola saveur cerise, une touche fruitée et originale. Canette de 33cl.",
+        "price": 3.50,
+        "type": "drink"
+      },
+      {
+        "id": "oasis-pcf",
+        "name": "Oasis Pomme Cassis Framboise",
+        "description": "Boisson rafraîchissante aux saveurs de pomme, cassis et framboise. Canette de 33cl.",
+        "price": 3.50,
+        "type": "drink"
+      },
+      {
+        "id": "oasis-tropical",
+        "name": "Oasis Tropical",
+        "description": "Boisson fruitée aux saveurs exotiques de fruits tropicaux. Canette de 33cl.",
+        "price": 3.00,
+        "type": "drink"
+      },
+      {
+        "id": "fanta-citron",
+        "name": "Fanta Citron Frappé",
+        "description": "Soda pétillant et rafraîchissant au citron, servi bien frais. Canette de 33cl.",
+        "price": 2.50,
+        "type": "drink"
+      },
+      {
+        "id": "fanta-orange",
+        "name": "Fanta Orange",
+        "description": "Soda pétillant et fruité à l'orange, rafraîchissant. Canette de 33cl.",
+        "price": 3.50,
+        "type": "drink"
+      },
+      {
+        "id": "capri-sun",
+        "name": "Capri-Sun Multivitaminé",
+        "description": "Boisson aux fruits riche en vitamines pour les petits et grands. Pochette de 20cl.",
+        "price": 2.00,
+        "type": "drink"
+      },
+      {
+        "id": "orangina-jaune",
+        "name": "Orangina Jaune",
+        "description": "Boisson gazeuse à l'orange avec pulpe, signature française incontournable. Canette de 33cl.",
+        "price": 3.00,
+        "type": "drink"
+      },
+      {
+        "id": "orangina-light",
+        "name": "Orangina Light",
+        "description": "Version légère de l'Orangina classique, moins calorique mais aussi désaltérante. Canette de 33cl.",
+        "price": 3.00,
+        "type": "drink"
+      },
+      {
+        "id": "schweppes-agrume",
+        "name": "Schweppes Agrume",
+        "description": "Soda pétillant aux agrumes, rafraîchissant et légèrement amer. Canette de 33cl.",
+        "price": 3.00,
+        "type": "drink"
+      },
+      {
+        "id": "schweppes-citron",
+        "name": "Schweppes Citron",
+        "description": "Tonic pétillant au citron, vif et désaltérant. Canette de 33cl.",
+        "price": 3.00,
+        "type": "drink"
+      },
+      {
+        "id": "fuzetea-peche",
+        "name": "FuzeTea Pêche",
+        "description": "Thé glacé à la pêche, léger et rafraîchissant. Canette de 33cl.",
+        "price": 3.00,
+        "type": "drink"
+      },
+      {
+        "id": "san-pellegrino-citron",
+        "name": "San Pellegrino Essenza Citron",
+        "description": "Eau pétillante légèrement aromatisée au citron, élégante et raffinée. Canette de 33cl.",
+        "price": 3.50,
+        "type": "drink"
+      },
+      {
+        "id": "san-pellegrino-limonata",
+        "name": "San Pellegrino Limonata",
+        "description": "Limonade italienne pétillante à la pulpe de citron, acidulée et désaltérante. Canette de 33cl.",
+        "price": 3.50,
+        "type": "drink"
+      },
+      {
+        "id": "san-pellegrino",
+        "name": "San Pellegrino Eau Gazeuse",
+        "description": "Eau minérale gazeuse italienne, finement pétillante. Bouteille de 50cl.",
+        "price": 2.50,
+        "type": "drink"
+      },
+      {
+        "id": "eau-cristaline",
+        "name": "Eau Cristaline",
+        "description": "Eau de source plate, pure et rafraîchissante. Bouteille de 50cl.",
+        "price": 1.50,
+        "type": "drink"
+      },
+      {
+        "id": "hawai-tropical",
+        "name": "Hawaï Tropical",
+        "description": "Boisson exotique aux saveurs des îles tropicales. Canette de 33cl.",
+        "price": 3.50,
+        "type": "drink"
+      }
+    ],
+    "sauces": [
+      {
+        "id": "piri-piri-piquante",
+        "name": "Sauce Piri Piri 'Piquante'",
+        "description": "Notre sauce Piri Piri traditionnelle piquante, relevée avec des piments frais et des épices portugaises.",
+        "price": 1.99,
+        "type": "sauce"
+      },
+      {
+        "id": "sauce-rouge",
+        "name": "Sauce Rouge 'Non piquante'",
+        "description": "Sauce douce et savoureuse à base de tomates et d'herbes, idéale pour ceux qui préfèrent éviter le piquant.",
+        "price": 1.99,
+        "type": "sauce"
+      },
+      {
+        "id": "sauce-ail",
+        "name": "Sauce Ail Confit 'Non piquante'",
+        "description": "Sauce crémeuse et parfumée à l'ail confit, onctueuse et non piquante.",
+        "price": 1.99,
+        "type": "sauce"
+      }
+    ],
+    "sides": [
+      {
+        "id": "pomme-terre-churras",
+        "name": "Accompagnement Pomme de Terre churrasqueiro",
+        "description": "Pommes de terre à la portugaise, préparées selon la recette traditionnelle des churrasqueiros.",
+        "price": 1.99,
+        "type": "side"
+      }
+    ],
+    "desserts": [
+      {
+        "id": "pastel-nata",
+        "name": "Dessert: Pastel de Nata 'Mon P'tit Flan'",
+        "description": "Délicieuse pâtisserie portugaise à la crème pâtissière caramélisée et à la pâte feuilletée croustillante.",
+        "price": 1.90,
+        "type": "dessert"
+      }
+    ]
+  }
+}

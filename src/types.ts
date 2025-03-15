@@ -17,6 +17,7 @@ export interface OrderOption {
   name: string;
   price: number;
   type: 'drink' | 'sauce' | 'side' | 'extra';
+  description?: string;
 }
 
 export interface OrderDetails {
