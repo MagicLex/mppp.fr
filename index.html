@@ -39,5 +39,20 @@
   <body>
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
+    <!-- Fallback for direct routes in production -->
+    <script>
+      // This helps handle direct navigation to routes in production
+      (function() {
+        // Skip for development
+        if (window.location.hostname === 'localhost') return;
+        
+        // Check if this is a direct route load (not root)
+        const path = window.location.pathname;
+        if (path !== '/' && !path.includes('.')) {
+          // Store the original path for the app to handle once loaded
+          sessionStorage.setItem('redirectPath', path);
+        }
+      })();
+    </script>
   </body>
 </html>

@@ -20,16 +20,18 @@ export default function Header() {
                 className="h-20 w-auto" 
               />
             </Link>
-            <Link to="/panier" className="relative">
-              <div className="bg-white p-2 rounded-full border-4 border-black">
-                <ShoppingCart size={24} className="text-black" />
-                {itemCount > 0 && (
-                  <span className="absolute -top-2 -right-2 bg-red-500 text-white text-sm font-cartoon rounded-full h-6 w-6 flex items-center justify-center border-2 border-black">
-                    {itemCount}
-                  </span>
-                )}
-              </div>
-            </Link>
+            <div className="flex items-center gap-4">
+              <Link to="/panier" className="relative">
+                <div className="bg-white p-2 rounded-full border-4 border-black">
+                  <ShoppingCart size={24} className="text-black" />
+                  {itemCount > 0 && (
+                    <span className="absolute -top-2 -right-2 bg-red-500 text-white text-sm font-cartoon rounded-full h-6 w-6 flex items-center justify-center border-2 border-black">
+                      {itemCount}
+                    </span>
+                  )}
+                </div>
+              </Link>
+            </div>
           </div>
 
           {/* Hero Section with two columns */}
