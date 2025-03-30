@@ -1,12 +1,14 @@
 import React, { useEffect, useState } from 'react';
-import { HashRouter, Routes, Route, useLocation, Link } from 'react-router-dom';
+import { HashRouter, Routes, Route, useLocation, Link, Navigate } from 'react-router-dom';
 import { Toaster } from 'react-hot-toast';
 import Header from './components/Header';
 import Menu from './components/Menu';
 import Cart from './components/Cart';
 import Checkout from './components/Checkout';
 import { CartProvider } from './context/CartContext';
-import { trackPageView } from './services/analytics';
+import { trackPageView, trackPurchase } from './services/analytics';
+import { confirmPayment } from './services/payplugService';
+import { createDealForContact } from './services/hubspot';
 
 // Analytics tracker component
 function AnalyticsTracker() {
@@ -87,6 +89,8 @@ function App() {
               <Route path="/commander" element={<Checkout />} />
               <Route path="/mentions-legales" element={<LegalNotice />} />
               <Route path="/conditions-generales" element={<TermsAndConditions />} />
+              <Route path="/payment-success" element={<PaymentSuccess />} />
+              <Route path="/payment-cancel" element={<PaymentCancel />} />
             </Routes>
           </main>
           <Toaster 
@@ -206,6 +210,195 @@ function TermsAndConditions() {
         <h2 className="text-xl font-semibold mb-2">8. Loi applicable et juridiction compétente</h2>
         <p>Les présentes conditions générales de vente sont soumises au droit français. En cas de litige, les tribunaux français seront seuls compétents.</p>
       </section>
+    </div>
+  );
+}
+
+function PaymentSuccess() {
+  const [isProcessing, setIsProcessing] = useState(true);
+  const [orderData, setOrderData] = useState<any>(null);
+  const [paymentConfirmed, setPaymentConfirmed] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const { clearCart } = useCart();
+  
+  useEffect(() => {
+    const processPaymentSuccess = async () => {
+      try {
+        // Get the stored order data
+        const storedOrder = localStorage.getItem('mpp_order');
+        if (!storedOrder) {
+          throw new Error('No order data found');
+        }
+        
+        const orderInfo = JSON.parse(storedOrder);
+        setOrderData(orderInfo);
+        
+        // Get payment ID from URL if available
+        const urlParams = new URLSearchParams(window.location.search);
+        const paymentId = urlParams.get('id');
+        
+        if (paymentId) {
+          // Confirm payment with PayPlug
+          const result = await confirmPayment(paymentId);
+          
+          if (result.success) {
+            // Create deal in HubSpot
+            if (orderInfo.orderDetails && orderInfo.orderDetails.email) {
+              const orderSummary = orderInfo.items.map((item: any) => 
+                `${item.quantity}x ${item.product.name}`
+              ).join(', ');
+              
+              await createDealForContact(
+                orderInfo.orderDetails.email,
+                orderInfo.total,
+                `Commande: ${orderSummary}. Heure de retrait: ${orderInfo.orderDetails.pickupTime}`
+              );
+              
+              // Track purchase event
+              trackPurchase(
+                paymentId,
+                orderInfo.total,
+                orderInfo.items.map((item: any) => ({
+                  productId: item.product.id,
+                  productName: item.product.name,
+                  price: item.product.price + (item.options ? item.options.reduce((sum: number, opt: any) => sum + opt.price, 0) : 0),
+                  quantity: item.quantity
+                }))
+              );
+            }
+            
+            setPaymentConfirmed(true);
+            // Clear the stored order and cart
+            localStorage.removeItem('mpp_order');
+            clearCart(); // Clear the cart immediately
+          }
+        } else {
+          // If no payment ID, we can't confirm the payment
+          throw new Error('No payment ID found in redirect URL');
+        }
+      } catch (error) {
+        console.error('Error processing payment success:', error);
+        setError(error instanceof Error ? error.message : 'Une erreur est survenue lors de la vérification du paiement');
+      } finally {
+        setIsProcessing(false);
+      }
+    };
+    
+    processPaymentSuccess();
+  }, []);
+  
+  if (isProcessing) {
+    return (
+      <div className="max-w-md mx-auto mt-10 p-6 bg-white rounded-lg shadow-lg border-4 border-black">
+        <div className="text-center">
+          <h2 className="text-2xl font-bold mb-4">Traitement de votre paiement...</h2>
+          <p className="mb-6">Veuillez patienter pendant que nous confirmons votre commande.</p>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-black mx-auto"></div>
+        </div>
+      </div>
+    );
+  }
+  
+  if (error || !orderData) {
+    return (
+      <div className="max-w-md mx-auto mt-10 p-6 bg-white rounded-lg shadow-lg border-4 border-black">
+        <div className="text-center">
+          <h2 className="text-2xl font-bold mb-4">
+            {error ? "Erreur de paiement" : "Aucune commande trouvée"}
+          </h2>
+          <div className="mb-6 text-red-600 flex justify-center">
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-16 w-16" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+            </svg>
+          </div>
+          <p className="mb-6">
+            {error 
+              ? `${error}. Veuillez contacter le restaurant.` 
+              : "Nous n'avons pas pu trouver les détails de votre commande."}
+          </p>
+          <Link to="/" className="btn-cartoon bg-amber-400 text-white py-2 px-4 rounded-xl font-cartoon">
+            Retour à l'accueil
+          </Link>
+        </div>
+      </div>
+    );
+  }
+  
+  return (
+    <div className="max-w-md mx-auto mt-10 p-6 bg-white rounded-lg shadow-lg border-4 border-black">
+      <div className="text-center">
+        <h2 className="text-2xl font-bold mb-4">
+          {paymentConfirmed ? "Commande confirmée !" : "Traitement de votre commande..."}
+        </h2>
+        
+        {paymentConfirmed ? (
+          <>
+            <div className="mb-6 text-green-600 flex justify-center">
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-16 w-16" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+              </svg>
+            </div>
+            <p className="mb-2">Merci pour votre commande !</p>
+            <p className="mb-6">Vous recevrez un email de confirmation à {orderData.orderDetails?.email}.</p>
+            
+            <div className="mb-6 p-4 bg-amber-100 rounded-lg text-left">
+              <h3 className="font-bold mb-2">Détails de la commande:</h3>
+              <p>Heure de retrait: {orderData.orderDetails?.pickupTime || "Dès que possible"}</p>
+              <p>Total: {orderData.total?.toFixed(2)}€</p>
+            </div>
+            
+            <Link to="/" className="btn-cartoon bg-amber-400 text-white py-2 px-4 rounded-xl font-cartoon">
+              Retour à l'accueil
+            </Link>
+          </>
+        ) : (
+          <>
+            <p className="mb-6">Le paiement a été reçu, nous finalisons votre commande...</p>
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-black mx-auto"></div>
+          </>
+        )}
+      </div>
+    </div>
+  );
+}
+
+function PaymentCancel() {
+  const [orderData, setOrderData] = useState<any>(null);
+  
+  useEffect(() => {
+    // Get the stored order data
+    const storedOrder = localStorage.getItem('mpp_order');
+    if (storedOrder) {
+      setOrderData(JSON.parse(storedOrder));
+    }
+  }, []);
+  
+  return (
+    <div className="max-w-md mx-auto mt-10 p-6 bg-white rounded-lg shadow-lg border-4 border-black">
+      <div className="text-center">
+        <h2 className="text-2xl font-bold mb-4">Paiement annulé</h2>
+        <div className="mb-6 text-red-600 flex justify-center">
+          <svg xmlns="http://www.w3.org/2000/svg" className="h-16 w-16" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+          </svg>
+        </div>
+        <p className="mb-6">Votre paiement a été annulé ou n'a pas abouti.</p>
+        
+        {orderData && (
+          <div className="mb-6 flex justify-center space-x-4">
+            <Link to="/panier" className="btn-cartoon bg-gray-500 text-white py-2 px-4 rounded-xl font-cartoon">
+              Retour au panier
+            </Link>
+            <Link to="/commander" className="btn-cartoon bg-amber-400 text-white py-2 px-4 rounded-xl font-cartoon">
+              Réessayer
+            </Link>
+          </div>
+        )}
+        
+        <Link to="/" className="btn-cartoon bg-amber-400 text-white py-2 px-4 rounded-xl font-cartoon">
+          Retour à l'accueil
+        </Link>
+      </div>
     </div>
   );
 }
