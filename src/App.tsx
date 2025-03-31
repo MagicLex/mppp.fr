@@ -36,8 +36,17 @@ function App() {
       <CartProvider>
         <div className="min-h-screen bg-amber-50">
           {/* Maintenance Banner */}
-          <div className="bg-red-600 text-white py-3 px-4 text-center font-bold">
-            🚧 Site en maintenance - Paiement non fonctionnel, veuillez nous contacter au 07 64 35 86 46 pour passer commande ! 🚧
+          <div className="bg-red-600 text-white py-3 px-4 text-center" style={{ boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)' }}>
+            <div className="container mx-auto flex items-center justify-center">
+              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mr-2">
+                <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path>
+                <line x1="12" y1="9" x2="12" y2="13"></line>
+                <line x1="12" y1="17" x2="12.01" y2="17"></line>
+              </svg>
+              <p className="font-bold text-lg">
+                🚧 Site en maintenance - Paiement non fonctionnel, veuillez nous contacter au <span className="underline">07 64 35 86 46</span> pour passer commande ! 🚧
+              </p>
+            </div>
           </div>
           <AnalyticsTracker />
           <Header />

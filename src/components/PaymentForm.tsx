@@ -124,7 +124,8 @@ export default function PaymentForm({ orderDetails, onSuccess }: PaymentFormProp
       
       <button
         disabled={true}
-        className="w-full btn-cartoon bg-gray-400 text-white py-3 px-4 rounded-2xl font-cartoon text-lg opacity-70 cursor-not-allowed"
+        className="w-full btn-cartoon bg-amber-400 text-black py-3 px-4 rounded-2xl font-cartoon text-lg border-4 border-black cursor-not-allowed"
+        style={{ boxShadow: '4px 4px 0 #000' }}
       >
         Paiement indisponible - Appelez le 07 64 35 86 46
       </button>
