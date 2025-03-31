@@ -29,57 +29,16 @@ function AnalyticsTracker() {
 }
 
 function App() {
-  // Use state to control splash visibility
-  const [showSplash, setShowSplash] = useState(true);
-  
-  // Check URL path - if we're on a legal page, don't show splash
-  useEffect(() => {
-    const path = window.location.pathname;
-    if (path === '/mentions-legales' || path === '/conditions-generales') {
-      setShowSplash(false);
-    }
-    
-    // Also check sessionStorage for redirects
-    const redirectPath = sessionStorage.getItem('redirectPath');
-    if (redirectPath) {
-      // If trying to access legal pages directly, bypass splash screen
-      if (redirectPath === '/mentions-legales' || redirectPath === '/conditions-generales') {
-        setShowSplash(false);
-      }
-      // Clear the stored path
-      sessionStorage.removeItem('redirectPath');
-    }
-  }, []);
-
-  if (showSplash) {
-    return (
-      <div 
-        className="fixed inset-0 flex items-center justify-center bg-[#ffbe34] z-50"
-      >
-        <img 
-          src="/images/flyer.jpg" 
-          alt="Mon P'tit Poulet" 
-          className="max-w-full max-h-full object-contain" 
-        />
-        {/* Hidden close button (top right) */}
-        <button 
-          onClick={() => setShowSplash(false)}
-          className="absolute top-4 right-4 text-transparent hover:text-black bg-transparent rounded-full p-2 transition-colors"
-          aria-label="Fermer"
-        >
-          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
-            <line x1="18" y1="6" x2="6" y2="18"></line>
-            <line x1="6" y1="6" x2="18" y2="18"></line>
-          </svg>
-        </button>
-      </div>
-    );
-  }
+  // Splash screen removed, replaced with maintenance banner
 
   return (
     <HashRouter>
       <CartProvider>
         <div className="min-h-screen bg-amber-50">
+          {/* Maintenance Banner */}
+          <div className="bg-red-600 text-white py-3 px-4 text-center font-bold">
+            🚧 Site en maintenance - Paiement non fonctionnel, veuillez nous contacter au 07 64 35 86 46 pour passer commande ! 🚧
+          </div>
           <AnalyticsTracker />
           <Header />
           <main className="container mx-auto px-4 pb-12">

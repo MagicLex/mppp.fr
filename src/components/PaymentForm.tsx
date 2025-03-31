@@ -110,23 +110,24 @@ export default function PaymentForm({ orderDetails, onSuccess }: PaymentFormProp
   // No input handling needed
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-6">
+    <div className="space-y-6">
       <div className="p-4 border-4 border-black rounded-2xl bg-white space-y-4">
         <div className="text-center">
-          <p className="text-md font-medium">Vous allez être redirigé vers la page de paiement sécurisée</p>
-          <p className="text-sm mt-4 text-gray-600">Aucune information bancaire n'est stockée sur notre site</p>
+          <p className="text-md font-medium text-red-600 font-bold">
+            ⚠️ SYSTÈME DE PAIEMENT EN MAINTENANCE ⚠️
+          </p>
+          <p className="mt-4">
+            Veuillez nous contacter par téléphone au <span className="font-bold">07 64 35 86 46</span> pour passer commande
+          </p>
         </div>
       </div>
       
       <button
-        type="submit"
-        disabled={isProcessing}
-        className={`w-full btn-cartoon bg-amber-400 text-white py-3 px-4 rounded-2xl font-cartoon text-lg ${
-          isProcessing ? 'opacity-70 cursor-not-allowed' : 'hover:bg-amber-500'
-        }`}
+        disabled={true}
+        className="w-full btn-cartoon bg-gray-400 text-white py-3 px-4 rounded-2xl font-cartoon text-lg opacity-70 cursor-not-allowed"
       >
-        {isProcessing ? 'Redirection en cours...' : `Procéder au paiement de ${total.toFixed(2)}€`}
+        Paiement indisponible - Appelez le 07 64 35 86 46
       </button>
-    </form>
+    </div>
   );
 }
