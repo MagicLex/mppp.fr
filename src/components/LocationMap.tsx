@@ -62,7 +62,7 @@ export default function LocationMap() {
         <h3 className="font-cartoon text-black mb-1">Nous trouver</h3>
         <p className="text-sm text-gray-600">24 Rue des Olivettes, 44000 Nantes</p>
         <div className="mt-2 text-xs bg-amber-100 p-2 rounded-lg border-2 border-black">
-          <p>Ouvert 7/7 de 11h à 22h</p>
+          <p>Ouvert 12h à 14h - 19h à 21h du Mardi au Samedi</p>
           <p className="mt-1">Parking à proximité</p>
         </div>
       </div>

@@ -47,7 +47,7 @@ export default function Header() {
               <div className="flex flex-col sm:flex-row gap-4">
                 <div className="flex items-center gap-2 bg-white/90 px-4 py-2 rounded-full border-4 border-black">
                   <Clock size={20} />
-                  <span>Ouvert 7/7 de 11h à 22h</span>
+                  <span>Ouvert 12h à 14h - 19h à 21h du Mardi au Samedi</span>
                 </div>
                 <div className="flex items-center gap-2 bg-white/90 px-4 py-2 rounded-full border-4 border-black">
                   <MapPin size={20} />
