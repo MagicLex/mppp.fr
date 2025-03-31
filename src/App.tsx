@@ -98,30 +98,39 @@ function LegalNotice() {
       <section className="mb-6">
         <h2 className="text-xl font-semibold mb-2">1. Identification de l'entreprise</h2>
         <p>Mon P'tit Poulet, entreprise individuelle</p>
+        <p>Forme juridique : Entreprise Individuelle</p>
         <p>SIRET : 93965543700019</p>
-        <p>Adresse : 8bis rue de la taunière 44860</p>
+        <p>SIREN : 939655437</p>
+        <p>Adresse du siège social : 8bis rue de la taunière 44860 Pont Saint Martin</p>
+        <p>Numéro de téléphone : 07 64 35 86 46</p>
         <p>Email : contact@mppp.fr</p>
       </section>
       
       <section className="mb-6">
         <h2 className="text-xl font-semibold mb-2">2. Hébergement</h2>
-        <p>Ce site est hébergé par OVHCloud</p>
+        <p>Ce site est hébergé par OVHCloud - Siège social : 2 rue Kellermann - 59100 Roubaix - France - Téléphone : 1007</p>
       </section>
 
       <section className="mb-6">
-        <h2 className="text-xl font-semibold mb-2">3. Collecte de données personnelles</h2>
+        <h2 className="text-xl font-semibold mb-2">4. Collecte et utilisation des données personnelles</h2>
         <p>Les informations recueillies sur ce site sont enregistrées dans un fichier informatisé par Mon P'tit Poulet pour la gestion des commandes et des livraisons.</p>
-        <p>Elles sont conservées pendant 1 ans et sont destinées aux services contabilité de Mon P'tit Poulet.</p>
-        <p>Conformément à la loi « informatique et libertés », vous pouvez exercer votre droit d'accès aux données vous concernant et les faire rectifier en contactant : contact@mppp.fr.</p>
+        <p>Elles sont conservées pendant 1 an et sont destinées aux services comptabilité de Mon P'tit Poulet.</p>
+        <p>Conformément à la loi « informatique et libertés » et au Règlement Général sur la Protection des Données (RGPD), vous pouvez exercer votre droit d'accès, de rectification, d'effacement, de limitation, de portabilité et d'opposition aux données vous concernant en contactant : contact@mppp.fr.</p>
       </section>
 
       <section className="mb-6">
-        <h2 className="text-xl font-semibold mb-2">4. Propriété intellectuelle</h2>
+        <h2 className="text-xl font-semibold mb-2">5. Cookies</h2>
+        <p>Notre site utilise le stockage local (localStorage) uniquement pour mémoriser les produits dans votre panier. Aucun cookie de traçage n'est utilisé à l'exception de ceux liés à Google Analytics pour analyser le trafic du site.</p>
+        <p>Vous pouvez configurer votre navigateur pour bloquer les cookies tiers ou être alerté lorsque des cookies sont envoyés.</p>
+      </section>
+
+      <section className="mb-6">
+        <h2 className="text-xl font-semibold mb-2">6. Propriété intellectuelle</h2>
         <p>L'ensemble du contenu de ce site (textes, images, vidéos, etc.) est la propriété exclusive de Mon P'tit Poulet ou de ses partenaires. Toute reproduction, même partielle, est strictement interdite sans autorisation préalable.</p>
       </section>
 
       <section className="mb-6">
-        <h2 className="text-xl font-semibold mb-2">5. Liens hypertextes</h2>
+        <h2 className="text-xl font-semibold mb-2">7. Liens hypertextes</h2>
         <p>Le site peut contenir des liens vers d'autres sites. Mon P'tit Poulet n'exerce aucun contrôle sur ces sites et décline toute responsabilité quant à leur contenu.</p>
       </section>
     </div>
@@ -135,13 +144,14 @@ function TermsAndConditions() {
       
       <section className="mb-6">
         <h2 className="text-xl font-semibold mb-2">1. Objet</h2>
-        <p>Les présentes conditions générales de vente régissent les relations contractuelles entre Mon P'tit Poulet et ses clients dans le cadre de la vente de produits alimentaires. Toute commande implique l'acceptation sans réserve par le client des présentes conditions générales de vente.</p>
+        <p>Les présentes conditions générales de vente régissent les relations contractuelles entre Mon P'tit Poulet, entreprise individuelle, SIRET : 93965543700019, dont le siège social est situé au 8bis rue de la taunière 44860 Pont Saint Martin, et ses clients dans le cadre de la vente de produits alimentaires. Toute commande implique l'acceptation sans réserve par le client des présentes conditions générales de vente.</p>
       </section>
       
       <section className="mb-6">
         <h2 className="text-xl font-semibold mb-2">2. Produits</h2>
         <p>Les caractéristiques essentielles des produits sont indiquées dans la fiche de chaque produit. Les photographies illustrant les produits n'entrent pas dans le champ contractuel et ne sont pas exhaustives.</p>
         <p>En cas d'indisponibilité d'un produit commandé, le client en sera informé et pourra choisir entre le remboursement ou le remplacement du produit.</p>
+        <p>La durée de l'offre des produits est déterminée par l'actualisation du site ou par épuisement des stocks.</p>
       </section>
 
       <section className="mb-6">
@@ -153,30 +163,51 @@ function TermsAndConditions() {
       <section className="mb-6">
         <h2 className="text-xl font-semibold mb-2">4. Commande et paiement</h2>
         <p>Le client valide sa commande après avoir vérifié le contenu de son panier. Cette validation constitue une acceptation irrévocable de la commande.</p>
-        <p>Le paiement s'effectue en ligne par carte bancaire au moment de la validation de la commande. Toutes les transactions sont sécurisées.</p>
+        <p>Le paiement s'effectue en ligne par carte bancaire au moment de la validation de la commande. Toutes les transactions sont sécurisées par PayPlug.</p>
+        <p>Le coût de la communication à distance utilisée pour la réalisation de la commande est à la charge du client et correspond au tarif appliqué par son fournisseur d'accès à internet.</p>
       </section>
 
       <section className="mb-6">
         <h2 className="text-xl font-semibold mb-2">5. Livraison et retrait</h2>
-        <p>Les commandes peuvent être retirées sur place à l'adresse indiquée sur le site, selon les horaires d'ouverture.</p>
-        <p>Les délais de préparation sont indiqués à titre indicatif et dépendent du volume de commandes.</p>
-        <p>En cas de retard significatif, le client sera informé dans les meilleurs délais.</p>
+        <p>Les commandes peuvent être retirées sur place à l'adresse du restaurant : 24 Rue des Olivettes, 44000 Nantes, selon les horaires d'ouverture affichés sur le site.</p>
+        <p>Les délais de préparation sont indiqués lors de la commande et dépendent du volume de commandes. Les délais de retrait sont généralement entre 15 et 30 minutes après confirmation de la commande.</p>
+        <p>En cas de retard significatif, le client sera informé par téléphone ou par email dans les meilleurs délais.</p>
       </section>
 
       <section className="mb-6">
         <h2 className="text-xl font-semibold mb-2">6. Droit de rétractation</h2>
         <p>Conformément à l'article L121-21-8 du Code de la Consommation, le droit de rétractation ne peut être exercé pour les denrées périssables.</p>
+        <p>En raison de la nature des produits vendus (produits alimentaires périssables), les commandes ne peuvent être annulées une fois validées et payées.</p>
       </section>
 
       <section className="mb-6">
-        <h2 className="text-xl font-semibold mb-2">7. Responsabilité</h2>
+        <h2 className="text-xl font-semibold mb-2">7. Service après-vente</h2>
+        <p>Pour toute question relative à une commande ou pour signaler un problème, le client peut contacter Mon P'tit Poulet :</p>
+        <ul className="list-disc pl-6 mt-2">
+          <li>Par téléphone au 07 64 35 86 46</li>
+          <li>Par email à contact@mppp.fr</li>
+          <li>Sur place au restaurant</li>
+        </ul>
+        <p className="mt-2">En cas de problème avéré avec un produit (qualité non conforme, erreur dans la commande), Mon P'tit Poulet s'engage à proposer une solution sous forme de remboursement ou de remplacement selon la situation.</p>
+      </section>
+
+      <section className="mb-6">
+        <h2 className="text-xl font-semibold mb-2">8. Responsabilité</h2>
         <p>Mon P'tit Poulet décline toute responsabilité en cas de mauvaise conservation des produits après leur retrait par le client.</p>
         <p>Le client est seul responsable du respect de la chaîne du froid après avoir pris possession de sa commande.</p>
+        <p>Pour des raisons d'hygiène et de sécurité alimentaire, les produits ne peuvent être ni repris ni échangés une fois la transaction finalisée.</p>
       </section>
 
       <section className="mb-6">
-        <h2 className="text-xl font-semibold mb-2">8. Loi applicable et juridiction compétente</h2>
+        <h2 className="text-xl font-semibold mb-2">9. Protection des données personnelles</h2>
+        <p>Les informations personnelles collectées lors de la commande sont nécessaires au traitement de celle-ci et à la gestion de la relation commerciale.</p>
+        <p>Ces informations sont traitées conformément à notre politique de confidentialité accessible dans les mentions légales.</p>
+      </section>
+
+      <section className="mb-6">
+        <h2 className="text-xl font-semibold mb-2">10. Loi applicable et juridiction compétente</h2>
         <p>Les présentes conditions générales de vente sont soumises au droit français. En cas de litige, les tribunaux français seront seuls compétents.</p>
+        <p>Tout différend relatif à l'interprétation ou à l'exécution des présentes conditions générales de vente sera soumis à une procédure de médiation préalable. En cas d'échec de la médiation, le litige sera porté devant le tribunal compétent de Nantes.</p>
       </section>
     </div>
   );
