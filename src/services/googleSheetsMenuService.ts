@@ -1,7 +1,13 @@
 import { Product, OrderOption } from '../types';
 
-// Use the CSV file from the public directory
-const CSV_PATH = '/data/json/main_menu.csv';
+// Google Sheet ID from the URL
+const SHEET_ID = '16lVNCu4xZaI6zrKT4WBrL6Q3tNjWnrlEmDtRZ2-oV9I';
+
+// The sheet number or name (gid parameter)
+const SHEET_GID = '290161789';
+
+// The URL to export the sheet as CSV
+const SHEETS_URL = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/export?format=csv&gid=${SHEET_GID}`;
 
 interface MenuItem {
   type: 'product' | 'option';
@@ -17,39 +23,19 @@ interface MenuItem {
 }
 
 // Parse CSV data
-async function parseCSV(csvText: string): Promise<MenuItem[]> {
+function parseCSV(csvText: string): MenuItem[] {
   const lines = csvText.split('\n');
   const headers = lines[0].split(',');
   
-  console.log('CSV Lines count:', lines.length);
   return lines.slice(1).filter(line => line.trim()).map(line => {
-    // Split by comma but respect quotes
-    const values = [];
-    let currentValue = '';
-    let insideQuotes = false;
-    
-    for (let i = 0; i < line.length; i++) {
-      const char = line[i];
-      
-      if (char === '"' && (i === 0 || line[i-1] !== '\\')) {
-        insideQuotes = !insideQuotes;
-      } else if (char === ',' && !insideQuotes) {
-        values.push(currentValue);
-        currentValue = '';
-      } else {
-        currentValue += char;
-      }
-    }
-    
-    // Don't forget the last value
-    values.push(currentValue);
+    const values = line.split(',');
     const item: any = {};
     
     headers.forEach((header, index) => {
       // Handle quoted values for description
-      if (header === 'description' && values[index].startsWith('"')) {
+      if (header === 'description' && values[index]?.startsWith('"')) {
         // Find the closing quote
-        let fullValue = values[index];
+        let fullValue = values[index] || '';
         let currentIndex = index + 1;
         
         while (!fullValue.endsWith('"') && currentIndex < values.length) {
@@ -60,13 +46,12 @@ async function parseCSV(csvText: string): Promise<MenuItem[]> {
         // Remove the quotes
         item[header] = fullValue.substring(1, fullValue.length - 1);
       } else {
-        let value = values[index];
+        let value = values[index] || '';
         
         // Convert to appropriate type
         if (header === 'price') {
           // Handle price format with comma as decimal separator
-          value = value.replace(/"/g, '').replace(',', '.');
-          console.log(`Parsing price: ${value}`);
+          value = value.replace(',', '.');
           item[header] = parseFloat(value) || 0;
         } else if (header === 'displayOnHome' || header === 'featured') {
           item[header] = value.toLowerCase() === 'true';
@@ -82,20 +67,20 @@ async function parseCSV(csvText: string): Promise<MenuItem[]> {
     }
     
     return item as MenuItem;
-  });
+  }).filter(item => item.id && item.name); // Filter out incomplete rows
 }
 
-// Fetch and parse CSV data
+// Fetch and parse Google Sheets data
 async function fetchMenuData(): Promise<{ products: Product[], options: Record<string, OrderOption[]> }> {
   try {
-    const response = await fetch(CSV_PATH);
+    const response = await fetch(SHEETS_URL);
     
     if (!response.ok) {
-      throw new Error(`Failed to fetch CSV: ${response.status}`);
+      throw new Error(`Failed to fetch Google Sheet: ${response.status}`);
     }
     
     const csvText = await response.text();
-    const menuItems = await parseCSV(csvText);
+    const menuItems = parseCSV(csvText);
     
     // Split into products and options
     const products = menuItems
@@ -122,7 +107,7 @@ async function fetchMenuData(): Promise<{ products: Product[], options: Record<s
           name: item.name,
           description: item.description,
           price: item.price,
-          type: item.optionType as 'drink' | 'sauce' | 'side' | 'extra'
+          type: item.optionType as 'drink' | 'sauce' | 'side' | 'dessert' | 'extra'
         };
         
         // Normalize the category names for better grouping
@@ -148,38 +133,83 @@ async function fetchMenuData(): Promise<{ products: Product[], options: Record<s
     
     return { products, options };
   } catch (error) {
-    console.error('Error fetching or parsing CSV:', error);
+    console.error('Error fetching or parsing Google Sheet:', error);
+    // Fall back to CSV file if Google Sheets access fails
+    return fallbackToCSV();
+  }
+}
+
+// Fallback to local CSV file
+async function fallbackToCSV() {
+  try {
+    const csvService = await import('./csvMenuService');
+    const products = await csvService.getAllProducts();
+    
+    const options: Record<string, OrderOption[]> = {};
+    const optionTypes = await csvService.getOptionTypes();
+    
+    for (const type of optionTypes) {
+      options[type] = await csvService.getOptionsByType(type);
+    }
+    
+    console.log('Fallback to CSV successful');
+    return { products, options };
+  } catch (error) {
+    console.error('Error in CSV fallback:', error);
     return { products: [], options: {} };
   }
 }
 
-// Cache for menu data
-let menuDataCache: { products: Product[], options: Record<string, OrderOption[]> } | null = null;
+// Cache for menu data with expiration
+let menuDataCache: { 
+  data: { products: Product[], options: Record<string, OrderOption[]> }, 
+  timestamp: number 
+} | null = null;
+
+// Cache expiration time (5 minutes)
+const CACHE_EXPIRATION = 5 * 60 * 1000; 
 
 // Get all products
 export async function getAllProducts(): Promise<Product[]> {
-  if (!menuDataCache) {
-    menuDataCache = await fetchMenuData();
+  const menuData = await getMenuData();
+  return menuData.products;
+}
+
+// Helper to get menu data with caching
+async function getMenuData() {
+  const now = Date.now();
+  
+  // If cache is valid and not expired
+  if (menuDataCache && (now - menuDataCache.timestamp < CACHE_EXPIRATION)) {
+    return menuDataCache.data;
   }
-  return menuDataCache.products;
+  
+  // Fetch fresh data
+  const freshData = await fetchMenuData();
+  menuDataCache = {
+    data: freshData,
+    timestamp: now
+  };
+  
+  return freshData;
 }
 
 // Get products by category
 export async function getProductsByCategory(category: string): Promise<Product[]> {
   const products = await getAllProducts();
-  return products.filter(product => (product as any).category === category);
+  return products.filter(product => product.category === category);
 }
 
 // Get products to display on home page
 export async function getHomePageProducts(): Promise<Product[]> {
   const products = await getAllProducts();
-  return products.filter(product => (product as any).displayOnHome);
+  return products.filter(product => product.displayOnHome);
 }
 
 // Get featured products
 export async function getFeaturedProducts(): Promise<Product[]> {
   const products = await getAllProducts();
-  return products.filter(product => (product as any).featured);
+  return products.filter(product => product.featured);
 }
 
 // Get product by ID
@@ -190,22 +220,17 @@ export async function getProductById(id: string): Promise<Product | undefined> {
 
 // Get all options by type
 export async function getOptionsByType(type: string): Promise<OrderOption[]> {
-  if (!menuDataCache) {
-    menuDataCache = await fetchMenuData();
-  }
-  
-  return menuDataCache.options[type] || [];
+  const menuData = await getMenuData();
+  return menuData.options[type] || [];
 }
 
 // Get option by ID
 export async function getOptionById(id: string): Promise<OrderOption | undefined> {
-  if (!menuDataCache) {
-    menuDataCache = await fetchMenuData();
-  }
+  const menuData = await getMenuData();
   
   // Search through all option types
-  for (const optionType in menuDataCache.options) {
-    const option = menuDataCache.options[optionType].find(option => option.id === id);
+  for (const optionType in menuData.options) {
+    const option = menuData.options[optionType].find(option => option.id === id);
     if (option) {
       return option;
     }
@@ -216,14 +241,11 @@ export async function getOptionById(id: string): Promise<OrderOption | undefined
 
 // Get all available option types
 export async function getOptionTypes(): Promise<string[]> {
-  if (!menuDataCache) {
-    menuDataCache = await fetchMenuData();
-  }
-  
-  return Object.keys(menuDataCache.options);
+  const menuData = await getMenuData();
+  return Object.keys(menuData.options);
 }
 
-// Invalidate cache (useful when the CSV is updated)
-export function invalidateCache(): void {
+// Force refresh cache
+export function refreshCache(): void {
   menuDataCache = null;
 }

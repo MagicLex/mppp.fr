@@ -1,0 +1,33 @@
+type,id,name,description,price,image,category,displayOnHome,featured
+product,poulet-entier,Mon P'tit Poulet Entier,"Poulet jaune de Vendée façon churrasqueira, grillé au charbon de bois professionnel dans un barbecue Portugais idéal pour 3 ou 4 personnes",22.9,/images/menu/poulet_entier.jpeg,main,TRUE,TRUE
+product,demi-poulet,Mon P'tit 1/2 Poulet,"1/2 de Poulet jaune de Vendée façon churrasqueira, grillé au charbon de bois professionnel dans un barbecue Portugais idéal pour 2 personnes",12.9,/images/menu/poulet_demi.jpeg,main,TRUE,TRUE
+product,quart-poulet,Mon P'tit 1/4 Poulet,"1/4 de Poulet jaune de Vendée façon churrasqueira, grillé au charbon de bois professionnel dans un barbecue Portugais idéal pour 2 personnes",7.9,/images/menu/poulet_quart.jpeg,main,TRUE,TRUE
+product,pommes-de-terre,Pommes de Terre,"Pommes de terre grenailles cuites au barbecue, l'accompagnement idéal",1.9,/images/menu/pomme_de_terre.jpeg,side,TRUE,TRUE
+product,sauce-piri-piri,Sauce Piri Piri 'Piquante',"Sauce piri-piri portugaise piquante pour une touche épicée et authentique (faite maison)",1.99,/images/menu/sauce_piripiri.jpeg,sauce,TRUE,TRUE
+product,sauce-rouge,Sauce Rouge 'Non piquante',"Sauce rouge non piquante, c'est une version de la sauce piri-piri sans la chaleur du piment (faite maison)",1.99,/images/menu/sauce_rouge.jpeg,sauce,TRUE,TRUE
+product,sauce-ail,Sauce Ail Confit 'Non piquante',"Sauce ail et coriandre avec du caractère, touche fraîche et savoureuse (faite maison)",1.99,/images/menu/sauce_ail_non_piquante.jpeg,sauce,TRUE,TRUE
+product,pastel-nata,Pastel de Nata 'Mon P'tit Flan' à l'unité,"Pastel de nata, dessert traditionnel portugais né du côté de Lisbonne au début du XVIII siècle",1.9,/images/menu/pastel_de_nata_unite.jpeg,dessert,TRUE,TRUE
+option,piri-piri-piquante,Sauce Piri Piri 'Piquante',Sauce piri-piri portugaise piquante pour une touche épicée et authentique (faite maison),1.9,,sauce,FALSE,FALSE
+option,sauce-rouge,Sauce Rouge 'Non piquante',"Sauce rouge non piquante, c'est une version de la sauce piri-piri sans la chaleur du piment (faite maison)",1.9,,sauce,FALSE,FALSE
+option,sauce-ail-coriandre,Sauce ail et coriandre,"Sauce ail et coriandre avec du caractère, touche fraîche et savoureuse (faite maison)",1.9,,sauce,FALSE,FALSE
+option,pastel-de-nata,Pastel de Nata 'Mon P'tit Flan' à l'unité,"Pastel de nata, dessert traditionnel portugais né du côté de Lisbonne au début du XVIII siècle",1.9,,dessert,FALSE,FALSE
+option,coca-cola,Coca Cola,"Boisson gazeuse rafraîchissante, servie bien fraîche en canette de 33cl.",2.9,,drink,FALSE,FALSE
+option,coca-cola-zero,Coca Cola Sans Sucre,"Version sans sucre du célèbre soda, avec le même goût original. Canette de 33cl.",2.9,,drink,FALSE,FALSE
+option,coca-cola-cherry,Coca Cola Cherry,"Coca-Cola saveur cerise, une touche fruitée et originale. Canette de 33cl.",2.9,,drink,FALSE,FALSE
+option,oasis-pcf,Oasis Pomme Cassis Framboise,"Boisson rafraîchissante aux saveurs de pomme, cassis et framboise. Canette de 33cl.",2.9,,drink,FALSE,FALSE
+option,oasis-tropical,Oasis Tropical,Boisson fruitée aux saveurs exotiques de fruits tropicaux. Canette de 33cl.,2.9,,drink,FALSE,FALSE
+option,fanta-citron,Fanta Citron Frappé,"Soda pétillant et rafraîchissant au citron, servi bien frais. Canette de 33cl.",2.5,,drink,FALSE,FALSE
+option,fanta-orange,Fanta Orange,"Soda pétillant et fruité à l'orange, rafraîchissant. Canette de 33cl.",2.9,,drink,FALSE,FALSE
+option,capri-sun,Capri-Sun Multivitaminé,Boisson aux fruits riche en vitamines pour les petits et grands. Pochette de 20cl.,1.9,,drink,FALSE,FALSE
+option,orangina-jaune,Orangina Jaune,"Boisson gazeuse à l'orange avec pulpe, signature française incontournable. Canette de 33cl.",2.9,,drink,FALSE,FALSE
+option,orangina-light,Orangina Light,"Version légère de l'Orangina classique, moins calorique mais aussi désaltérante. Canette de 33cl.",2.9,,drink,FALSE,FALSE
+option,schweppes-agrume,Schweppes Agrume,"Soda pétillant aux agrumes, rafraîchissant et légèrement amer. Canette de 33cl.",2.9,,drink,FALSE,FALSE
+option,schweppes-citron,Schweppes Citron,"Tonic pétillant au citron, vif et désaltérant. Canette de 33cl.",2.9,,drink,FALSE,FALSE
+option,fuzetea-peche,FuzeTea Pêche,"Thé glacé à la pêche, léger et rafraîchissant. Canette de 33cl.",2.9,,drink,FALSE,FALSE
+option,san-pellegrino-citron,San Pellegrino Essenza Citron,"Eau pétillante légèrement aromatisée au citron, élégante et raffinée. Canette de 33cl.",2.9,,drink,FALSE,FALSE
+option,san-pellegrino-limonata,San Pellegrino Limonata,"Limonade italienne pétillante à la pulpe de citron, acidulée et désaltérante. Canette de 33cl.",2.9,,drink,FALSE,FALSE
+option,san-pellegrino,San Pellegrino Eau Gazeuse,"Eau minérale gazeuse italienne, finement pétillante. Bouteille de 50cl.",2,,drink,FALSE,FALSE
+option,eau-cristaline,Eau Cristaline,"Eau de source plate, pure et rafraîchissante. Bouteille de 50cl.",1.5,,drink,FALSE,FALSE
+option,hawai-tropical,Hawaï Tropical,Boisson exotique aux saveurs des îles tropicales. Canette de 33cl.,2.9,,drink,FALSE,FALSE
+option,sumol-ananas,Sumol Ananas,Boisson gazeuse aux fruits typiquement portugaise,2.9,,drink,FALSE,FALSE
+option,sumol-orange,Sumol Orange,Boisson gazeuse aux fruits typiquement portugaise,2.9,,drink,FALSE,FALSE

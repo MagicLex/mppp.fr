@@ -1,9 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { Plus, Minus, Check } from 'lucide-react';
 import { OrderOption } from '../types';
-// Choose which service to use:
-// import { getOptionsByType, getOptionTypes } from '../services/menuService'; // JSON version
-import { getOptionsByType, getOptionTypes } from '../services/csvMenuService'; // CSV version
+// Import from the central menu service
+import { getOptionsByType, getOptionTypes } from '../services/menu';
 
 interface ProductOptionsProps {
   onAddOption: (option: OrderOption) => void;
@@ -64,8 +63,8 @@ export default function ProductOptions({
   };
 
   return (
-    <div className="mt-4">
-      <h4 className="font-cartoon text-lg text-amber-900 mb-2">Ajouter des options</h4>
+    <div className="mt-6">
+      <h4 className="font-cartoon text-2xl text-amber-900 mb-4">Ajouter des options</h4>
       
       {/* Tabs */}
       {loading ? (
@@ -73,13 +72,13 @@ export default function ProductOptions({
           <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-amber-500 mx-auto"></div>
         </div>
       ) : (
-        <div className="flex border-b-4 border-black mb-4 overflow-x-auto">
+        <div className="flex border-b-4 border-black mb-6 overflow-x-auto">
           {categories.map((category) => (
             <button
               key={category}
-              className={`px-4 py-2 font-cartoon text-sm whitespace-nowrap ${
+              className={`px-6 py-3 font-cartoon text-base whitespace-nowrap ${
                 activeTab === category 
-                  ? 'bg-amber-400 text-white border-4 border-b-0 border-black rounded-t-xl' 
+                  ? 'bg-amber-400 text-black border-4 border-b-0 border-black rounded-t-xl' 
                   : 'bg-white text-gray-700'
               }`}
               onClick={() => setActiveTab(category)}
@@ -95,42 +94,42 @@ export default function ProductOptions({
       )}
       
       {/* Options */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+      <div className="grid grid-cols-1 gap-3">
         {loading ? (
           Array.from({ length: 4 }).map((_, index) => (
-            <div key={index} className="p-3 rounded-xl border-2 border-gray-200 animate-pulse">
-              <div className="h-5 bg-gray-200 rounded w-3/4 mb-2"></div>
-              <div className="h-4 bg-gray-200 rounded w-1/4"></div>
+            <div key={index} className="p-4 rounded-xl border-2 border-gray-200 animate-pulse">
+              <div className="h-6 bg-gray-200 rounded w-3/4 mb-2"></div>
+              <div className="h-5 bg-gray-200 rounded w-1/4"></div>
             </div>
           ))
         ) : options[activeTab]?.map((option) => (
           <div 
             key={option.id}
-            className={`flex items-center justify-between p-3 rounded-xl border-2 ${
+            className={`flex items-center justify-between p-4 rounded-xl border-3 ${
               isOptionSelected(option.id) 
-                ? 'border-amber-500 bg-amber-50' 
-                : 'border-gray-200'
+                ? 'border-amber-500 bg-amber-50 shadow-md' 
+                : 'border-gray-200 hover:border-amber-300 hover:bg-amber-50/50'
             }`}
           >
             <div className="flex-1">
-              <p className="font-medium">{option.name}</p>
+              <p className="font-cartoon text-lg">{option.name}</p>
               {option.description && (
-                <p className="text-xs text-gray-500 mt-1 line-clamp-2">{option.description}</p>
+                <p className="text-sm text-gray-600 mt-1 line-clamp-2">{option.description}</p>
               )}
-              <p className="text-sm text-gray-600 mt-1">{option.price.toFixed(2)}€</p>
+              <p className="text-lg font-bold text-amber-600 mt-1">{option.price.toFixed(2)}€</p>
             </div>
             <button
               onClick={() => handleOptionToggle(option)}
-              className={`p-2 rounded-full ${
+              className={`p-3 rounded-full ${
                 isOptionSelected(option.id)
-                  ? 'bg-amber-400 text-white'
-                  : 'bg-gray-100 text-gray-600'
+                  ? 'bg-amber-400 text-black border-2 border-black'
+                  : 'bg-gray-100 text-gray-700 border-2 border-gray-300 hover:bg-amber-100'
               }`}
             >
               {isOptionSelected(option.id) ? (
-                <Check size={18} />
+                <Check size={22} />
               ) : (
-                <Plus size={18} />
+                <Plus size={22} />
               )}
             </button>
           </div>

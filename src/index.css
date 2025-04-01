@@ -32,7 +32,8 @@
 
 /* Price tag style */
 .price-tag {
-  @apply relative px-4 py-2 bg-amber-400 text-white font-bold rounded-full border-4 border-black;
+  @apply relative px-4 py-2 bg-amber-400 text-black font-bold rounded-full border-4 border-black;
+  box-shadow: 2px 2px 8px rgba(0, 0, 0, 0.3);
 }
 
 /* Leaflet Map Styles */

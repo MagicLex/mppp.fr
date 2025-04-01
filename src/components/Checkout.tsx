@@ -23,6 +23,17 @@ export default function Checkout() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    // Log form data before submission
+    console.log('Form submission - Order details:', orderDetails);
+    
+    // Validate pickup time
+    if (!orderDetails.pickupTime?.trim()) {
+      alert('Veuillez indiquer une heure de retrait');
+      return;
+    }
+    
+    // Show payment form if validation passes
     setShowPaymentForm(true);
     
     // Track begin checkout event
@@ -44,15 +55,25 @@ export default function Checkout() {
   const generateTimeSlots = () => {
     const slots = [];
     const now = new Date();
-    const start = new Date(now.setMinutes(Math.ceil(now.getMinutes() / 30) * 30));
+    // Round to the next 30 minutes
+    const start = new Date(now);
+    start.setMinutes(Math.ceil(now.getMinutes() / 30) * 30);
+    start.setSeconds(0);
+    start.setMilliseconds(0);
     
+    console.log('Start time for pickup:', start.toLocaleTimeString());
+    
+    // Generate 8 slots of 30 minutes each
     for (let i = 0; i < 8; i++) {
       const time = new Date(start.getTime() + i * 30 * 60000);
+      // Only include slots during business hours (11:00 - 22:00)
       if (time.getHours() >= 11 && time.getHours() < 22) {
-        slots.push(time.toLocaleTimeString('fr-FR', { 
+        const timeString = time.toLocaleTimeString('fr-FR', { 
           hour: '2-digit', 
           minute: '2-digit' 
-        }));
+        });
+        slots.push(timeString);
+        console.log(`Added time slot: ${timeString}`);
       }
     }
     return slots;
@@ -105,19 +126,19 @@ export default function Checkout() {
 
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
-              Heure de retrait
+              Heure de retrait et instructions
             </label>
-            <select
-              required
+            <input
+              type="text"
+              placeholder="ex: 19h30, dès que possible, etc."
               className="w-full px-3 py-2 border-4 border-black rounded-xl"
               value={orderDetails.pickupTime}
               onChange={(e) => setOrderDetails({ ...orderDetails, pickupTime: e.target.value })}
-            >
-              <option value="">Sélectionnez une heure</option>
-              {generateTimeSlots().map((time) => (
-                <option key={time} value={time}>{time}</option>
-              ))}
-            </select>
+              required
+            />
+            <p className="text-sm text-gray-500 italic mt-1">
+              Préparation ~15 minutes après commande. Vous pouvez préciser vos contraintes horaires.
+            </p>
           </div>
 
           {/* Order Summary */}

@@ -5,9 +5,8 @@ import toast from 'react-hot-toast';
 import LocationMap from './LocationMap';
 import { useNavigate } from 'react-router-dom';
 import { trackAddToCart } from '../services/analytics';
-// Choose which service to use:
-// import { getAllProducts, getHomePageProducts } from '../services/menuService'; // JSON version
-import { getAllProducts, getHomePageProducts, getProductsByCategory, getFeaturedProducts } from '../services/csvMenuService'; // CSV version
+// Import from the central menu service
+import { getAllProducts, getHomePageProducts, getProductsByCategory, getFeaturedProducts } from '../services/menu';
 import { Product } from '../types';
 
 export default function Menu() {
@@ -20,12 +19,9 @@ export default function Menu() {
     // Load products from the menu service
     const loadProducts = async () => {
       try {
-        // You can use different methods depending on what you want to display:
-        // - getAllProducts(): all products
-        // - getHomePageProducts(): products marked for display on home page
-        // - getProductsByCategory('main'): only main dishes
-        // - getFeaturedProducts(): products marked as featured
-        const products = await getFeaturedProducts();
+        // Get all products
+        const products = await getAllProducts();
+        console.log('Loaded products from CSV:', products);
         setMenuProducts(products);
       } catch (error) {
         console.error('Error loading products:', error);
@@ -65,7 +61,7 @@ export default function Menu() {
                 toast.dismiss(t.id);
                 navigate('/panier');
               }}
-              className="px-3 py-1 bg-amber-400 text-white rounded-md text-sm font-medium"
+              className="px-3 py-1 bg-amber-400 text-black rounded-md text-sm font-medium"
             >
               Oui, aller au panier
             </button>
@@ -109,46 +105,40 @@ export default function Menu() {
             </div>
           </div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-6xl mx-auto">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-10 max-w-6xl mx-auto">
             {menuProducts.map((product) => (
-            <div key={product.id} className="overflow-hidden card-cartoon">
-              <div className="relative">
-                <img 
-                  src={product.image} 
-                  alt={product.name}
-                  className="w-full h-48 object-cover"
-                  style={{ borderTopLeftRadius: 'calc(1.5rem - 4px)', borderTopRightRadius: 'calc(1.5rem - 4px)' }}
-                />
-                <div 
-                  className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent" 
-                  style={{ borderTopLeftRadius: 'calc(1.5rem - 4px)', borderTopRightRadius: 'calc(1.5rem - 4px)' }}
-                />
-              </div>
-              <div className="p-6">
-                <div className="flex justify-between items-start mb-4">
-                  <div>
+              <div key={product.id} className="overflow-hidden card-cartoon transform hover:scale-[1.02] transition-transform duration-300">
+                <div className="relative">
+                  <img 
+                    src={product.image} 
+                    alt={product.name}
+                    className="w-full h-72 object-cover"
+                    style={{ borderTopLeftRadius: 'calc(1.5rem - 4px)', borderTopRightRadius: 'calc(1.5rem - 4px)' }}
+                  />
+                  <span className="price-tag absolute top-4 right-4 shadow-lg">
+                    {typeof product.price === 'number' ? product.price.toFixed(2) : 'N/A'}€
+                  </span>
+                </div>
+                <div className="p-6">
+                  <div className="mb-4">
                     <h3 className="text-2xl font-cartoon text-amber-900 flex items-center gap-2">
                       {product.name}
                       {product.id === 'poulet-entier' && (
                         <Flame size={24} className="text-amber-500" />
                       )}
                     </h3>
-                    <p className="text-gray-600 mt-1 line-clamp-3">{product.description}</p>
+                    <p className="text-gray-600 mt-2 line-clamp-3">{product.description}</p>
                   </div>
-                  <span className="price-tag">
-                    {product.price.toFixed(2)}€
-                  </span>
+                  
+                  <button
+                    onClick={() => handleAddToCart(product.id)}
+                    className="btn-cartoon w-full bg-amber-400 text-black py-4 px-6 rounded-2xl flex items-center justify-center space-x-3 text-lg font-cartoon mt-4"
+                  >
+                    <ShoppingBag size={24} />
+                    <span>Ajouter au panier</span>
+                  </button>
                 </div>
-                
-                <button
-                  onClick={() => handleAddToCart(product.id)}
-                  className="btn-cartoon w-full bg-amber-400 text-white py-4 px-6 rounded-2xl flex items-center justify-center space-x-3 text-lg font-cartoon"
-                >
-                  <ShoppingBag size={24} />
-                  <span>Ajouter au panier</span>
-                </button>
               </div>
-            </div>
             ))}
           </div>
         )}

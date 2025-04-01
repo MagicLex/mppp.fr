@@ -12,7 +12,10 @@
   },
   "dependencies": {
     "@hubspot/api-client": "^10.2.0",
+    "axios": "^1.8.4",
+    "cors": "^2.8.5",
     "dotenv": "^16.4.7",
+    "express": "^4.21.2",
     "leaflet": "^1.9.4",
     "lucide-react": "^0.344.0",
     "react": "^18.3.1",

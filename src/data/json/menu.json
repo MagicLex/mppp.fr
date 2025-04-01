@@ -2,30 +2,30 @@
   "products": [
     {
       "id": "poulet-entier",
-      "name": "Poulet Entier",
-      "description": "Poulet portugais grillé au charbon de bois avec sauce Piri Piri. Marinée selon notre recette traditionnelle puis grillée à la perfection sur notre rôtissoire pour vous offrir une saveur authentique.",
+      "name": "Mon P'tit Poulet Entier",
+      "description": "Poulet jaune de Vendée façon churrasqueira, grillé au charbon de bois professionnel dans un barbecue Portugais idéal pour 3 ou 4 personnes",
       "price": 22.90,
-      "image": "/images/menu/poulet.webp",
+      "image": "/images/menu/poulet_entier.jpeg",
       "category": "main",
       "displayOnHome": true,
       "featured": true
     },
     {
       "id": "demi-poulet",
-      "name": "1/2 Poulet",
-      "description": "Demi poulet portugais grillé avec sauce Piri Piri. Savoureux et juteux avec une peau croustillante, parfait pour une personne affamée.",
+      "name": "Mon P'tit 1/2 Poulet",
+      "description": "1/2 de Poulet jaune de Vendée façon churrasqueira, grillé au charbon de bois professionnel dans un barbecue Portugais idéal pour 2 personnes",
       "price": 12.90,
-      "image": "/images/menu/poulet.webp",
+      "image": "/images/menu/poulet_demi.jpeg",
       "category": "main",
       "displayOnHome": true,
       "featured": true
     },
     {
       "id": "quart-poulet",
-      "name": "1/4 Poulet",
-      "description": "Quart de poulet portugais grillé avec sauce Piri Piri. Tendre et savoureux, idéal pour un repas léger mais satisfaisant.",
+      "name": "Mon P'tit 1/4 Poulet",
+      "description": "1/4 de Poulet jaune de Vendée façon churrasqueira, grillé au charbon de bois professionnel dans un barbecue Portugais idéal pour 2 personnes",
       "price": 7.90,
-      "image": "/images/menu/poulet.webp",
+      "image": "/images/menu/poulet_quart.jpeg",
       "category": "main",
       "displayOnHome": true,
       "featured": true
@@ -33,10 +33,50 @@
     {
       "id": "pommes-terre",
       "name": "Pommes de Terre",
-      "description": "Pommes de terre rôties aux herbes fraîches. Servies seules, idéales en accompagnement.",
+      "description": "Pommes de terre grenailles cuites au barbecue, l'accompagnement idéal",
       "price": 1.90,
-      "image": "/images/menu/pomme-de-terre.jpg",
+      "image": "/images/menu/pomme_de_terre.jpeg",
       "category": "side",
+      "displayOnHome": true,
+      "featured": true
+    },
+    {
+      "id": "sauce-piri-piri",
+      "name": "Sauce Piri Piri 'Piquante'",
+      "description": "Sauce piri-piri portugaise piquante pour une touche épicée et authentique (faite maison)",
+      "price": 1.99,
+      "image": "/images/menu/sauce_piripiri.jpeg",
+      "category": "sauce",
+      "displayOnHome": true,
+      "featured": true
+    },
+    {
+      "id": "sauce-rouge",
+      "name": "Sauce Rouge 'Non piquante'",
+      "description": "Sauce rouge non piquante, c'est une version de la sauce piri-piri sans la chaleur du piment (faite maison)",
+      "price": 1.99,
+      "image": "/images/menu/sauce_rouge.jpeg",
+      "category": "sauce",
+      "displayOnHome": true,
+      "featured": true
+    },
+    {
+      "id": "sauce-ail",
+      "name": "Sauce ail et coriandre",
+      "description": "Sauce ail et coriandre avec du caractère, touche fraîche et savoureuse (faite maison)",
+      "price": 1.99,
+      "image": "/images/menu/sauce_ail_non_piquante.jpeg",
+      "category": "sauce",
+      "displayOnHome": true,
+      "featured": true
+    },
+    {
+      "id": "pastel-nata",
+      "name": "Pastel de Nata 'Mon P'tit Flan' à l'unité",
+      "description": "Pastel de nata, dessert traditionnel portugais né du côté de Lisbonne au début du XVIII siècle",
+      "price": 1.90,
+      "image": "/images/menu/pastel_de_nata_unite.jpeg",
+      "category": "dessert",
       "displayOnHome": true,
       "featured": true
     }
