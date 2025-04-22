@@ -11,8 +11,8 @@ export async function createStripeCheckout(
     console.log('Creating Stripe checkout for items:', items);
     console.log('Order details:', orderDetails);
     
-    // For production with domain-based routes
-    const response = await fetch('/api/create-checkout', {
+    // For Vercel API routes
+    const response = await fetch(`${window.location.origin}/api/create-checkout`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -67,8 +67,8 @@ export async function getSessionStatus(sessionId: string): Promise<any> {
   try {
     console.log('Retrieving Stripe session status:', sessionId);
     
-    // For production with domain-based routes
-    const response = await fetch(`/api/session?sessionId=${encodeURIComponent(sessionId)}`);
+    // For Vercel API routes
+    const response = await fetch(`${window.location.origin}/api/session?sessionId=${encodeURIComponent(sessionId)}`);
     
     if (!response.ok) {
       const errorText = await response.text();
