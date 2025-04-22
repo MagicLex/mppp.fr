@@ -143,12 +143,13 @@ export default function Cart() {
             <span>Total</span>
             <span>{total.toFixed(2)}€</span>
           </div>
-          <div
-            className="block w-full bg-amber-400 text-black py-3 px-4 rounded-md text-center font-bold cursor-not-allowed border-4 border-black"
+          <Link
+            to="/commander"
+            className="block w-full bg-amber-400 text-black py-3 px-4 rounded-md text-center font-bold hover:bg-amber-500 border-4 border-black transition-all"
             style={{ boxShadow: '4px 4px 0 #000' }}
           >
-            ⚠️ Appelez le 07 64 35 86 46 pour commander ⚠️
-          </div>
+            Passer à la commande
+          </Link>
         </div>
       </div>
     </div>

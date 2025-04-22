@@ -41,8 +41,8 @@ export default function Header() {
               
               {/* Content area - stacks on mobile */}
               <div className="flex flex-col md:flex-row items-start md:items-center mt-4 md:mt-0">
-                {/* Text content */}
-                <div className="mb-4 md:mb-0 md:ml-6 flex flex-col">
+                {/* Text content - reduced margin on desktop */}
+                <div className="mb-4 md:mb-0 md:ml-2 flex flex-col">
                   <h2 className="text-2xl md:text-3xl font-cartoon text-black leading-tight">
                     Authentique Poulet Portugais
                   </h2>

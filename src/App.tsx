@@ -7,8 +7,8 @@ import Cart from './components/Cart';
 import Checkout from './components/Checkout';
 import { CartProvider } from './context/CartContext';
 import { trackPageView, trackPurchase } from './services/analytics';
-import { confirmPayment } from './services/payplugService';
 import { createDealForContact } from './services/hubspot';
+// We'll import stripeService dynamically in the PaymentSuccess component
 
 // Analytics tracker component
 function AnalyticsTracker() {
@@ -36,18 +36,6 @@ function App() {
       <CartProvider>
         <div className="min-h-screen bg-amber-50">
           {/* Maintenance Banner */}
-          <div className="bg-red-600 text-white py-3 px-4 text-center" style={{ boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)' }}>
-            <div className="container mx-auto flex items-center justify-center">
-              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mr-2">
-                <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path>
-                <line x1="12" y1="9" x2="12" y2="13"></line>
-                <line x1="12" y1="17" x2="12.01" y2="17"></line>
-              </svg>
-              <p className="font-bold text-lg">
-                🚧 Site en maintenance - Paiement non fonctionnel, veuillez nous contacter au <span className="underline">07 64 35 86 46</span> pour passer commande ! 🚧
-              </p>
-            </div>
-          </div>
           <AnalyticsTracker />
           <Header />
           <main className="container mx-auto px-4 pb-12">
@@ -235,12 +223,23 @@ function PaymentSuccess() {
         // Get payment ID from URL if available
         const urlParams = new URLSearchParams(window.location.search);
         const paymentId = urlParams.get('id');
+        const paymentMethod = 'stripe'; // We only use Stripe now
         
+        // Validate payment
         if (paymentId) {
-          // Confirm payment with PayPlug
-          const result = await confirmPayment(paymentId);
+          let paymentSuccessful = false;
           
-          if (result.success) {
+          // Verify payment with Stripe
+          const { getSessionStatus } = await import('./services/stripeService');
+          try {
+            const session = await getSessionStatus(paymentId);
+            paymentSuccessful = session.payment_status === 'paid';
+          } catch (stripeError) {
+            console.error('Error confirming Stripe payment:', stripeError);
+            throw new Error('Failed to verify Stripe payment');
+          }
+          
+          if (paymentSuccessful) {
             // Create deal in HubSpot
             if (orderInfo.orderDetails && orderInfo.orderDetails.email) {
               const orderSummary = orderInfo.items.map((item: any) => 
@@ -250,7 +249,7 @@ function PaymentSuccess() {
               await createDealForContact(
                 orderInfo.orderDetails.email,
                 orderInfo.total,
-                `Commande: ${orderSummary}. Heure de retrait: ${orderInfo.orderDetails.pickupTime}`
+                `Commande: ${orderSummary}. Heure de retrait: ${orderInfo.orderDetails.pickupTime} (via ${paymentMethod})`
               );
               
               // Track purchase event
@@ -270,10 +269,60 @@ function PaymentSuccess() {
             // Clear the stored order and cart
             localStorage.removeItem('mpp_order');
             clearCart(); // Clear the cart immediately
+          } else {
+            throw new Error(`Le paiement n'a pas pu être confirmé via ${paymentMethod}`);
           }
         } else {
-          // If no payment ID, we can't confirm the payment
-          throw new Error('No payment ID found in redirect URL');
+          // Check if we have a Stripe session ID in the URL (Stripe redirect format)
+          const sessionId = urlParams.get('session_id');
+          if (sessionId) {
+            // Import dynamically to avoid breaking existing code
+            const { getSessionStatus } = await import('./services/stripeService');
+            // Verify payment with Stripe
+            try {
+              const session = await getSessionStatus(sessionId);
+              
+              if (session.payment_status === 'paid') {
+                // Create deal in HubSpot
+                if (orderInfo.orderDetails && orderInfo.orderDetails.email) {
+                  const orderSummary = orderInfo.items.map((item: any) => 
+                    `${item.quantity}x ${item.product.name}`
+                  ).join(', ');
+                  
+                  await createDealForContact(
+                    orderInfo.orderDetails.email,
+                    orderInfo.total,
+                    `Commande: ${orderSummary}. Heure de retrait: ${orderInfo.orderDetails.pickupTime} (via Stripe)`
+                  );
+                  
+                  // Track purchase event
+                  trackPurchase(
+                    sessionId,
+                    orderInfo.total,
+                    orderInfo.items.map((item: any) => ({
+                      productId: item.product.id,
+                      productName: item.product.name,
+                      price: item.product.price + (item.options ? item.options.reduce((sum: number, opt: any) => sum + opt.price, 0) : 0),
+                      quantity: item.quantity
+                    }))
+                  );
+                }
+                
+                setPaymentConfirmed(true);
+                // Clear the stored order and cart
+                localStorage.removeItem('mpp_order');
+                clearCart(); // Clear the cart immediately
+              } else {
+                throw new Error('Le paiement Stripe n\'a pas pu être confirmé');
+              }
+            } catch (stripeError) {
+              console.error('Error confirming Stripe payment:', stripeError);
+              throw new Error('Failed to verify Stripe payment');
+            }
+          } else {
+            // If no payment ID or session ID, we can't confirm the payment
+            throw new Error('No payment identifier found in redirect URL');
+          }
         }
       } catch (error) {
         console.error('Error processing payment success:', error);
@@ -344,6 +393,7 @@ function PaymentSuccess() {
               <h3 className="font-bold mb-2">Détails de la commande:</h3>
               <p>Heure de retrait: {orderData.orderDetails?.pickupTime || "Dès que possible"}</p>
               <p>Total: {orderData.total?.toFixed(2)}€</p>
+              <p>Méthode de paiement: {orderData.paymentMethod === 'stripe' ? 'Stripe' : 'PayPlug'}</p>
             </div>
             
             <Link to="/" className="btn-cartoon bg-amber-400 text-white py-2 px-4 rounded-xl font-cartoon">

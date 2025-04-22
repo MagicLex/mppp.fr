@@ -1,9 +1,10 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useCart } from '../context/CartContext';
-import PaymentForm from './PaymentForm';
 import toast from 'react-hot-toast';
 import { trackBeginCheckout } from '../services/analytics';
+import { createStripeCheckout } from '../services/stripeService';
+import { createOrUpdateContact } from '../services/hubspot';
 
 export default function Checkout() {
   const navigate = useNavigate();
@@ -14,7 +15,8 @@ export default function Checkout() {
     email: '',
     pickupTime: ''
   });
-  const [showPaymentForm, setShowPaymentForm] = useState(false);
+  const [showPaymentOptions, setShowPaymentOptions] = useState(false);
+  const [isProcessing, setIsProcessing] = useState(false);
 
   if (items.length === 0) {
     navigate('/');
@@ -33,8 +35,8 @@ export default function Checkout() {
       return;
     }
     
-    // Show payment form if validation passes
-    setShowPaymentForm(true);
+    // Show payment options directly
+    setShowPaymentOptions(true);
     
     // Track begin checkout event
     trackBeginCheckout(
@@ -51,6 +53,51 @@ export default function Checkout() {
   const handlePaymentSuccess = () => {
     navigate('/');
   };
+  
+  // Handle Stripe payment directly
+  const handleStripePayment = async () => {
+    console.log('Processing Stripe payment...');
+    console.log('Order details:', orderDetails);
+    console.log('Cart items:', items);
+    
+    setIsProcessing(true);
+
+    try {
+      // Create/update contact in HubSpot
+      await createOrUpdateContact({
+        email: orderDetails.email,
+        firstname: orderDetails.name,
+        phone: orderDetails.phone,
+        lastorder: new Date().toISOString()
+      });
+      
+      // Create Stripe checkout session through our Vercel serverless function
+      const session = await createStripeCheckout(items, orderDetails);
+      
+      // Redirect to Stripe Checkout
+      if (session && session.url) {
+        console.log("Redirecting to Stripe checkout page:", session.url);
+        window.location.href = session.url;
+      } else {
+        console.error("Invalid Stripe checkout URL. Payment cannot proceed.");
+        toast.error("Une erreur est survenue lors de la redirection vers la page de paiement. Veuillez réessayer.");
+        setIsProcessing(false);
+      }
+    } catch (error) {
+      console.error('Stripe payment error:', error);
+      
+      // Show user-friendly error message
+      if (error instanceof Error) {
+        toast.error(`Erreur: ${error.message}`, { duration: 8000 });
+      } else {
+        toast.error('Erreur lors du paiement. Veuillez réessayer.', { duration: 5000 });
+      }
+      
+      setIsProcessing(false);
+    }
+  };
+
+  // PayPlug payment has been removed as we're only using Stripe now
 
   const generateTimeSlots = () => {
     const slots = [];
@@ -83,7 +130,7 @@ export default function Checkout() {
     <div className="max-w-2xl mx-auto space-y-8">
       <h2 className="text-3xl font-cartoon text-amber-900">Finaliser la commande</h2>
       
-      {!showPaymentForm ? (
+      {!showPaymentOptions ? (
         <form onSubmit={handleSubmit} className="card-cartoon p-6 space-y-6">
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -171,9 +218,10 @@ export default function Checkout() {
             </div>
             <button
               type="submit"
-              className="w-full btn-cartoon bg-amber-400 text-white py-3 px-4 rounded-2xl font-cartoon text-lg"
+              className="w-full btn-cartoon bg-amber-400 text-black py-3 px-4 rounded-2xl font-cartoon text-lg border-4 border-black"
+              style={{ boxShadow: '4px 4px 0 #000' }}
             >
-              Procéder au paiement
+              Continuer pour payer
             </button>
           </div>
         </form>
@@ -189,10 +237,31 @@ export default function Checkout() {
               <p><strong>Heure de retrait:</strong> {orderDetails.pickupTime}</p>
             </div>
             
-            <PaymentForm 
-              orderDetails={orderDetails}
-              onSuccess={handlePaymentSuccess}
-            />
+            <div className="space-y-6">
+              <div className="p-4 border-4 border-black rounded-2xl bg-white space-y-4">
+                <h3 className="text-xl font-cartoon text-center mb-4">Paiement</h3>
+                
+                {/* Stripe Payment Button */}
+                <button
+                  onClick={handleStripePayment}
+                  disabled={isProcessing}
+                  className="w-full btn-cartoon bg-blue-600 text-white py-3 px-4 rounded-2xl font-cartoon text-lg border-4 border-black mb-4 hover:bg-blue-700 transition-colors"
+                  style={{ boxShadow: '4px 4px 0 #000' }}
+                >
+                  {isProcessing ? 'Traitement en cours...' : 'Payer par Carte Bancaire'}
+                </button>
+                
+                {/* Contact Info */}
+                <div className="text-center mt-6 border-t-2 border-gray-200 pt-4">
+                  <p className="text-sm text-gray-700">
+                    Besoin d'aide avec votre commande?
+                  </p>
+                  <p className="text-sm font-bold mt-1">
+                    Appelez-nous au 07 64 35 86 46
+                  </p>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       )}
