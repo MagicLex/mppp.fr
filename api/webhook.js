@@ -4,8 +4,7 @@ import Stripe from 'stripe';
 // Initialize Stripe with the API key from environment variables
 const stripe = Stripe(process.env.STRIPE_SECRET_KEY);
 
-// This is your Stripe CLI webhook secret for testing
-// Replace this with your actual webhook secret in production
+// Load the webhook secret from environment variables
 const endpointSecret = process.env.STRIPE_WEBHOOK_SECRET;
 
 export default async function handler(req, res) {

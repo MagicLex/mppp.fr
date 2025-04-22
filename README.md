@@ -21,8 +21,8 @@ A modern web application for a Portuguese chicken restaurant, built with React, 
 
 1. Clone the repository
    ```bash
-   git clone https://github.com/your-username/mon-ptit-poulet.git
-   cd mon-ptit-poulet
+   git clone https://github.com/MagicLex/mppp.fr.git
+   cd mppp.fr
    ```
 
 2. Install dependencies
@@ -110,7 +110,7 @@ The application uses Stripe for payments through Vercel serverless functions:
 
 3. To set up Stripe webhooks:
    - Register a webhook in the Stripe dashboard
-   - Set the endpoint to `https://your-domain.com/api/webhook`
+   - Set the endpoint to `https://mppp.fr/api/webhook`
    - Add the webhook secret to your Vercel environment variables
 
 ## License

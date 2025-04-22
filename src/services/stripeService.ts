@@ -11,6 +11,7 @@ export async function createStripeCheckout(
     console.log('Creating Stripe checkout for items:', items);
     console.log('Order details:', orderDetails);
     
+    // For production with domain-based routes
     const response = await fetch('/api/create-checkout', {
       method: 'POST',
       headers: {
@@ -66,6 +67,7 @@ export async function getSessionStatus(sessionId: string): Promise<any> {
   try {
     console.log('Retrieving Stripe session status:', sessionId);
     
+    // For production with domain-based routes
     const response = await fetch(`/api/session?sessionId=${encodeURIComponent(sessionId)}`);
     
     if (!response.ok) {
