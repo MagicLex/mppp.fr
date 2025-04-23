@@ -4,12 +4,48 @@ import Stripe from 'stripe';
 // Initialize Stripe with the API key from environment variables
 const stripe = Stripe(process.env.STRIPE_SECRET_KEY);
 
+// Restaurant configuration - must match what's in src/data/options.ts
+const RESTAURANT_CONFIG = {
+  openingHours: {
+    // 24-hour format
+    opening: 11, // 11:00 AM
+    closing: 22, // 10:00 PM
+  },
+  // Allow ordering 30 minutes before opening
+  preorderMinutes: 30,
+  // Stop orders 30 minutes before closing
+  lastOrderMinutes: 30
+};
+
+function isRestaurantOpen() {
+  const now = new Date();
+  const currentHour = now.getHours();
+  const currentMinute = now.getMinutes();
+  
+  // Convert current time to decimal hours (e.g., 11:30 -> 11.5)
+  const currentTimeDecimal = currentHour + (currentMinute / 60);
+  
+  // Calculate effective open/close times with the buffer periods
+  const effectiveOpeningTime = RESTAURANT_CONFIG.openingHours.opening - (RESTAURANT_CONFIG.preorderMinutes / 60);
+  const effectiveClosingTime = RESTAURANT_CONFIG.openingHours.closing - (RESTAURANT_CONFIG.lastOrderMinutes / 60);
+  
+  return currentTimeDecimal >= effectiveOpeningTime && currentTimeDecimal <= effectiveClosingTime;
+}
+
 export default async function handler(req, res) {
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Method not allowed' });
   }
 
   try {
+    // Check if restaurant is currently accepting orders
+    if (!isRestaurantOpen()) {
+      return res.status(400).json({ 
+        error: 'Restaurant is closed',
+        message: 'Le restaurant n\'accepte pas de commandes pour le moment. Veuillez revenir pendant les heures d\'ouverture.'
+      });
+    }
+    
     const { items, orderDetails } = req.body;
     
     if (!items || !items.length) {

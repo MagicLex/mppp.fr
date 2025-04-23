@@ -1,10 +1,11 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useCart } from '../context/CartContext';
 import toast from 'react-hot-toast';
 import { trackBeginCheckout } from '../services/analytics';
 import { createStripeCheckout } from '../services/stripeService';
 import { createOrUpdateContact } from '../services/hubspot';
+import { isRestaurantOpen, getRestaurantStatus } from '../data/options';
 
 export default function Checkout() {
   const navigate = useNavigate();
@@ -15,10 +16,45 @@ export default function Checkout() {
   });
   const [showPaymentOptions, setShowPaymentOptions] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
+  const [restaurantStatus, setRestaurantStatus] = useState(getRestaurantStatus());
+  
+  // Check if restaurant is open periodically
+  useEffect(() => {
+    // Check restaurant status immediately
+    setRestaurantStatus(getRestaurantStatus());
+    
+    // Set up an interval to check every minute
+    const interval = setInterval(() => {
+      setRestaurantStatus(getRestaurantStatus());
+    }, 60000); // 60 seconds
+    
+    return () => clearInterval(interval); // Clean up on unmount
+  }, []);
 
   if (items.length === 0) {
     navigate('/');
     return null;
+  }
+  
+  // If restaurant is closed, show a message
+  if (!restaurantStatus.isOpen) {
+    return (
+      <div className="max-w-2xl mx-auto space-y-8">
+        <h2 className="text-3xl font-bold text-amber-900">Finaliser la commande</h2>
+        <div className="card-cartoon p-6 space-y-6">
+          <div className="text-center p-4 bg-red-100 rounded-lg border-4 border-red-500">
+            <h3 className="text-xl font-bold text-red-700 mb-2">Restaurant fermé</h3>
+            <p className="text-red-700 mb-4">{restaurantStatus.message}</p>
+            <button 
+              onClick={() => navigate('/')} 
+              className="btn-cartoon bg-amber-400 text-black py-2 px-4 rounded-xl"
+            >
+              Retour au menu
+            </button>
+          </div>
+        </div>
+      </div>
+    );
   }
 
   const handleSubmit = async (e: React.FormEvent) => {

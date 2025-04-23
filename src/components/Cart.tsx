@@ -1,13 +1,28 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { Minus, Plus, Trash2, X, ChevronDown, ChevronUp, Coffee, Utensils, Cookie } from 'lucide-react';
+import { Minus, Plus, Trash2, X, ChevronDown, ChevronUp, Coffee, Utensils, Cookie, Clock } from 'lucide-react';
 import { useCart } from '../context/CartContext';
 import { OrderOption } from '../types';
 import ProductOptions from './ProductOptions';
+import { isRestaurantOpen, getRestaurantStatus } from '../data/options';
 
 export default function Cart() {
   const { items, updateQuantity, removeItem, removeOptionFromItem, addOptionToItem, total } = useCart();
   const [editingItemId, setEditingItemId] = useState<string | null>(null);
+  const [restaurantStatus, setRestaurantStatus] = useState(getRestaurantStatus());
+  
+  // Check if restaurant is open periodically
+  useEffect(() => {
+    // Check restaurant status immediately
+    setRestaurantStatus(getRestaurantStatus());
+    
+    // Set up an interval to check every minute
+    const interval = setInterval(() => {
+      setRestaurantStatus(getRestaurantStatus());
+    }, 60000); // 60 seconds
+    
+    return () => clearInterval(interval); // Clean up on unmount
+  }, []);
 
   if (items.length === 0) {
     return (
@@ -173,12 +188,28 @@ export default function Cart() {
             <span>Total</span>
             <span className="text-amber-900">{total.toFixed(2)}€</span>
           </div>
+          
+          {!restaurantStatus.isOpen ? (
+            <div className="bg-red-100 rounded-lg p-4 mb-4 border-2 border-red-300">
+              <div className="flex items-center mb-2">
+                <Clock className="text-red-600 mr-2" size={24} />
+                <h3 className="text-lg font-bold text-red-600">Restaurant fermé</h3>
+              </div>
+              <p className="text-red-700 text-sm">{restaurantStatus.message}</p>
+            </div>
+          ) : null}
+          
           <Link
             to="/commander"
-            className="block w-full bg-amber-400 text-black py-4 px-4 rounded-lg text-center text-xl font-bold hover:bg-amber-500 border-4 border-black transition-all"
-            style={{ boxShadow: '4px 4px 0 #000' }}
+            className={`block w-full py-4 px-4 rounded-lg text-center text-xl font-bold border-4 border-black transition-all ${
+              !restaurantStatus.isOpen 
+                ? 'bg-gray-400 cursor-not-allowed opacity-70 text-gray-700' 
+                : 'bg-amber-400 text-black hover:bg-amber-500'
+            }`}
+            style={{ boxShadow: restaurantStatus.isOpen ? '4px 4px 0 #000' : 'none' }}
+            onClick={(e) => !restaurantStatus.isOpen && e.preventDefault()}
           >
-            Passer à la commande
+            {restaurantStatus.isOpen ? 'Passer à la commande' : 'Commande indisponible'}
           </Link>
         </div>
       </div>
