@@ -358,7 +358,16 @@ function PaymentSuccess() {
               <h3 className="font-bold mb-2">Détails de la commande:</h3>
               {orderData && orderData.orderDetails && (
                 <>
-                  <p>Heure de retrait: {orderData.orderDetails.pickupTime || "Dès que possible"}</p>
+                  <p>Heure de retrait: {
+                    orderData.orderDetails.pickupTime === "ASAP" ? "Dès que possible" :
+                    orderData.orderDetails.pickupTime === "15min" ? "Dans 15 minutes" :
+                    orderData.orderDetails.pickupTime === "30min" ? "Dans 30 minutes" :
+                    orderData.orderDetails.pickupTime === "45min" ? "Dans 45 minutes" :
+                    orderData.orderDetails.pickupTime === "60min" ? "Dans 1 heure" :
+                    orderData.orderDetails.pickupTime === "90min" ? "Dans 1h30" :
+                    orderData.orderDetails.pickupTime === "120min" ? "Dans 2 heures" :
+                    orderData.orderDetails.pickupTime || "Dès que possible"
+                  }</p>
                   {orderData.orderDetails.notes && (
                     <p>Instructions: {orderData.orderDetails.notes}</p>
                   )}

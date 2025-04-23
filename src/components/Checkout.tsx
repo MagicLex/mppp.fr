@@ -93,29 +93,27 @@ export default function Checkout() {
 
   const generateTimeSlots = () => {
     const slots = [];
+    
+    // Add relative time slots (15, 30, 45 min, etc.)
+    const relativeTimeSlots = [
+      { value: '15min', label: 'Dans 15 minutes' },
+      { value: '30min', label: 'Dans 30 minutes' },
+      { value: '45min', label: 'Dans 45 minutes' },
+      { value: '60min', label: 'Dans 1 heure' },
+      { value: '90min', label: 'Dans 1h30' },
+      { value: '120min', label: 'Dans 2 heures' },
+    ];
+    
+    // Get current hour to check if we're within business hours
     const now = new Date();
-    // Round to the next 30 minutes
-    const start = new Date(now);
-    start.setMinutes(Math.ceil(now.getMinutes() / 30) * 30);
-    start.setSeconds(0);
-    start.setMilliseconds(0);
+    const currentHour = now.getHours();
     
-    console.log('Start time for pickup:', start.toLocaleTimeString());
-    
-    // Generate 8 slots of 30 minutes each
-    for (let i = 0; i < 8; i++) {
-      const time = new Date(start.getTime() + i * 30 * 60000);
-      // Only include slots during business hours (11:00 - 22:00)
-      if (time.getHours() >= 11 && time.getHours() < 22) {
-        const timeString = time.toLocaleTimeString('fr-FR', { 
-          hour: '2-digit', 
-          minute: '2-digit' 
-        });
-        slots.push(timeString);
-        console.log(`Added time slot: ${timeString}`);
-      }
+    // Only show time slots if we're within or approaching business hours (11:00 - 22:00)
+    if (currentHour >= 9 && currentHour < 22) {
+      return relativeTimeSlots;
     }
-    return slots;
+    
+    return [];
   };
 
   return (
@@ -134,10 +132,10 @@ export default function Checkout() {
               onChange={(e) => setOrderDetails({ ...orderDetails, pickupTime: e.target.value })}
               required
             >
-              <option value="">Choisir une heure</option>
-              <option value="Dès que possible">Dès que possible (~15 min)</option>
+              <option value="">Choisir une heure de retrait</option>
+              <option value="ASAP">Dès que possible (~15 min)</option>
               {generateTimeSlots().map(slot => (
-                <option key={slot} value={slot}>{slot}</option>
+                <option key={slot.value} value={slot.value}>{slot.label}</option>
               ))}
             </select>
             <p className="text-sm text-gray-500 italic mt-1">

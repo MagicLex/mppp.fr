@@ -45,7 +45,11 @@ export default async function handler(req, res) {
           console.log('Order processed successfully:', {
             customer: session.customer_details,
             amount: session.amount_total / 100, // Convert from cents to euros
-            items: lineItems.data.length
+            items: lineItems.data.length,
+            metadata: session.metadata,
+            pickup_time: session.metadata.pickup_time,
+            notes: session.metadata.notes,
+            order_time: session.metadata.order_time
           });
           
           // You could call other APIs or services here

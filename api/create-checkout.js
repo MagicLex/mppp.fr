@@ -47,8 +47,9 @@ export default async function handler(req, res) {
     
     // Store order details in metadata
     const metadata = {
-      pickup_time: orderDetails?.pickupTime || 'Dès que possible',
+      pickup_time: orderDetails?.pickupTime || 'ASAP',
       notes: orderDetails?.notes || 'Aucune instruction particulière',
+      order_time: new Date().toISOString(),
     };
     
     // Create Stripe checkout session
