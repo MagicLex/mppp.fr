@@ -1,5 +1,6 @@
 // Serverless function for handling Stripe webhooks
 import Stripe from 'stripe';
+import { sendOrderEmail } from './utils/email';
 
 // Initialize Stripe with the API key from environment variables
 const stripe = Stripe(process.env.STRIPE_SECRET_KEY);
@@ -41,18 +42,51 @@ export default async function handler(req, res) {
           // Get line items from the session
           const lineItems = await stripe.checkout.sessions.listLineItems(session.id);
           
-          // Process the order (e.g., save to database, send email, etc.)
-          console.log('Order processed successfully:', {
-            customer: session.customer_details,
-            amount: session.amount_total / 100, // Convert from cents to euros
-            items: lineItems.data.length,
-            metadata: session.metadata,
-            pickup_time: session.metadata.pickup_time,
-            notes: session.metadata.notes,
-            order_time: session.metadata.order_time
+          // Extract customer details
+          const customerDetails = session.customer_details || {};
+          
+          // Format order time
+          const orderTime = session.metadata?.order_time || new Date().toISOString();
+          const orderDate = new Date(orderTime);
+          
+          // Format date as DD/MM/YYYY
+          const date = orderDate.toLocaleDateString('fr-FR');
+          
+          // Format time as HH:MM
+          const time = orderDate.toLocaleTimeString('fr-FR', { 
+            hour: '2-digit', 
+            minute: '2-digit' 
           });
           
-          // You could call other APIs or services here
+          // Format items as string
+          const itemsString = lineItems.data.map(item => 
+            `${item.quantity}x ${item.description}`
+          ).join('; ');
+          
+          // Prepare order for email
+          const order = {
+            id: session.id,
+            date,
+            time,
+            customer_name: customerDetails.name || 'Non spécifié',
+            customer_email: customerDetails.email || 'Non spécifié',
+            customer_phone: customerDetails.phone || 'Non spécifié',
+            pickup_time: session.metadata?.pickup_time || 'ASAP',
+            notes: session.metadata?.notes || 'Aucune instruction particulière',
+            total: session.amount_total / 100, // Convert from cents to euros
+            items: itemsString
+          };
+          
+          console.log('Order processed successfully:', {
+            customer: customerDetails,
+            amount: session.amount_total / 100,
+            items: lineItems.data.length,
+            metadata: session.metadata
+          });
+          
+          // Send order notification email
+          await sendOrderEmail(order);
+          
         } catch (error) {
           console.error('Error processing order:', error);
         }
