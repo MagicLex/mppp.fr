@@ -15,7 +15,7 @@
 
 /* Cartoon-style button */
 .btn-cartoon {
-  @apply relative overflow-hidden transition-transform hover:scale-105 border-4 border-black;
+  @apply relative overflow-hidden transition-transform hover:scale-105 border-4 border-black font-button font-semibold text-base;
   box-shadow: 4px 4px 0 #000;
 }
 
@@ -89,3 +89,5 @@
   @apply border-4 border-black rounded-xl;
   box-shadow: 4px 4px 0 #000;
 }
+
+/* Remove all custom toast styling */

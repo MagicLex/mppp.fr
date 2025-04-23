@@ -238,7 +238,7 @@ export default function PaymentForm({ orderDetails, onSuccess }: PaymentFormProp
         <button
           onClick={handleStripePayment}
           disabled={isProcessing}
-          className="w-full btn-cartoon bg-blue-600 text-white py-3 px-4 rounded-2xl font-cartoon text-lg border-4 border-black mb-4 hover:bg-blue-700 transition-colors"
+          className="w-full btn-cartoon bg-blue-600 text-white py-3 px-4 rounded-2xl text-lg border-4 border-black mb-4 hover:bg-blue-700 transition-colors"
           style={{ boxShadow: '4px 4px 0 #000' }}
         >
           {isProcessing ? 'Traitement en cours...' : 'Payer par Carte Bancaire (Stripe)'}
@@ -248,7 +248,7 @@ export default function PaymentForm({ orderDetails, onSuccess }: PaymentFormProp
         <button
           onClick={handlePayPlugPayment}
           disabled={isProcessing}
-          className="w-full btn-cartoon bg-amber-500 text-black py-3 px-4 rounded-2xl font-cartoon text-lg border-4 border-black hover:bg-amber-600 transition-colors"
+          className="w-full btn-cartoon bg-amber-500 text-black py-3 px-4 rounded-2xl text-lg border-4 border-black hover:bg-amber-600 transition-colors"
           style={{ boxShadow: '4px 4px 0 #000' }}
         >
           {isProcessing ? 'Traitement en cours...' : 'Payer par Carte Bancaire (PayPlug)'}

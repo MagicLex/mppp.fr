@@ -6,6 +6,7 @@ export default {
       fontFamily: {
         sans: ['Poppins', 'system-ui', 'sans-serif'],
         cartoon: ['Lilita One', 'cursive'],
+        button: ['Poppins', 'system-ui', 'sans-serif'],
       },
       borderRadius: {
         'cartoon': '2rem',

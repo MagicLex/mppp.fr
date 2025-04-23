@@ -21,10 +21,8 @@ export interface OrderOption {
 }
 
 export interface OrderDetails {
-  name: string;
-  phone: string;
-  email: string;
   pickupTime: string;
+  notes?: string;
 }
 
 export interface HubspotContact {

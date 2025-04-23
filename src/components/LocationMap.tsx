@@ -60,7 +60,7 @@ export default function LocationMap() {
       </div>
       
       <div className="absolute bottom-6 left-6 z-20 bg-white rounded-xl p-4 border-4 border-black" style={{ boxShadow: '4px 4px 0 #000' }}>
-        <h3 className="font-cartoon text-black mb-2">Nous trouver</h3>
+        <h3 className="font-bold text-black mb-2">Nous trouver</h3>
         
         <div className="flex gap-2 items-start mb-2">
           <MapPin size={16} className="text-amber-600 flex-shrink-0 mt-1" />

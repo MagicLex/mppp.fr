@@ -45,12 +45,10 @@ export default async function handler(req, res) {
       };
     });
     
-    // Store customer information in metadata
+    // Store order details in metadata
     const metadata = {
-      customer_name: orderDetails?.name || '',
-      customer_phone: orderDetails?.phone || '',
       pickup_time: orderDetails?.pickupTime || 'Dès que possible',
-      customer_email: orderDetails?.email || ''
+      notes: orderDetails?.notes || 'Aucune instruction particulière',
     };
     
     // Create Stripe checkout session
@@ -64,8 +62,18 @@ export default async function handler(req, res) {
       client_reference_id: Date.now().toString(),
       locale: 'fr',
       // Collect customer details
-      customer_email: orderDetails?.email || undefined,
-      billing_address_collection: 'required'
+      billing_address_collection: 'required',
+      shipping_address_collection: {
+        allowed_countries: ['FR'],
+      },
+      phone_number_collection: {
+        enabled: true,
+      },
+      custom_text: {
+        shipping_address: {
+          message: 'Vos coordonnées pour le retrait à 24 Rue des Olivettes, 44000 Nantes'
+        },
+      }
     });
     
     res.status(200).json({ id: session.id, url: session.url });

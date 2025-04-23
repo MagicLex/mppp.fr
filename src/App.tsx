@@ -5,7 +5,7 @@ import Header from './components/Header';
 import Menu from './components/Menu';
 import Cart from './components/Cart';
 import Checkout from './components/Checkout';
-import { CartProvider } from './context/CartContext';
+import { CartProvider, useCart } from './context/CartContext';
 import { trackPageView, trackPurchase } from './services/analytics';
 import { createDealForContact } from './services/hubspot';
 // We'll import stripeService dynamically in the PaymentSuccess component
@@ -50,15 +50,24 @@ function App() {
             </Routes>
           </main>
           <Toaster 
-            position="bottom-center"
+            position="top-center"
+            reverseOrder={false}
+            gutter={8}
+            containerStyle={{
+              top: 20,
+              margin: '0 auto',
+            }}
             toastOptions={{
               duration: 3000,
               style: {
                 background: '#fff',
                 color: '#333',
                 boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)',
-                borderRadius: '0.5rem',
+                borderRadius: '0.75rem',
                 border: '4px solid #000',
+                padding: '16px',
+                maxWidth: '500px',
+                width: '100%',
               },
             }} 
           />
@@ -211,51 +220,42 @@ function PaymentSuccess() {
   useEffect(() => {
     const processPaymentSuccess = async () => {
       try {
-        // Get the stored order data
-        const storedOrder = localStorage.getItem('mpp_order');
-        if (!storedOrder) {
-          throw new Error('No order data found');
+        // Log the URL parameters for debugging
+        console.log('Current URL:', window.location.href);
+        console.log('Search params:', window.location.search);
+        
+        // Extract session_id from the URL
+        const searchParams = new URLSearchParams(window.location.hash.split('?')[1] || '');
+        const sessionId = searchParams.get('session_id');
+        console.log('Extracted session_id:', sessionId);
+        
+        if (!sessionId) {
+          throw new Error('No payment identifier found in redirect URL');
         }
         
-        const orderInfo = JSON.parse(storedOrder);
-        setOrderData(orderInfo);
+        // Get the stored order data (if available)
+        const storedOrder = localStorage.getItem('mpp_order');
+        let orderInfo = null;
         
-        // Get payment ID from URL if available
-        const urlParams = new URLSearchParams(window.location.search);
-        const paymentId = urlParams.get('id');
-        const paymentMethod = 'stripe'; // We only use Stripe now
+        if (storedOrder) {
+          orderInfo = JSON.parse(storedOrder);
+          setOrderData(orderInfo);
+        }
         
-        // Validate payment
-        if (paymentId) {
-          let paymentSuccessful = false;
+        // Import dynamically to avoid breaking existing code
+        const { getSessionStatus } = await import('./services/stripeService');
+        
+        // Verify payment with Stripe
+        try {
+          const session = await getSessionStatus(sessionId);
+          console.log('Stripe session retrieved:', session);
           
-          // Verify payment with Stripe
-          const { getSessionStatus } = await import('./services/stripeService');
-          try {
-            const session = await getSessionStatus(paymentId);
-            paymentSuccessful = session.payment_status === 'paid';
-          } catch (stripeError) {
-            console.error('Error confirming Stripe payment:', stripeError);
-            throw new Error('Failed to verify Stripe payment');
-          }
-          
-          if (paymentSuccessful) {
-            // Create deal in HubSpot
-            if (orderInfo.orderDetails && orderInfo.orderDetails.email) {
-              const orderSummary = orderInfo.items.map((item: any) => 
-                `${item.quantity}x ${item.product.name}`
-              ).join(', ');
-              
-              await createDealForContact(
-                orderInfo.orderDetails.email,
-                orderInfo.total,
-                `Commande: ${orderSummary}. Heure de retrait: ${orderInfo.orderDetails.pickupTime} (via ${paymentMethod})`
-              );
-              
-              // Track purchase event
+          if (session.payment_status === 'paid') {
+            // Track purchase event
+            if (orderInfo && orderInfo.items) {
               trackPurchase(
-                paymentId,
-                orderInfo.total,
+                sessionId,
+                orderInfo.total || 0,
                 orderInfo.items.map((item: any) => ({
                   productId: item.product.id,
                   productName: item.product.name,
@@ -263,6 +263,26 @@ function PaymentSuccess() {
                   quantity: item.quantity
                 }))
               );
+              
+              // Create deal in HubSpot (if customer email is available from Stripe)
+              if (session.customer_details && session.customer_details.email) {
+                const orderSummary = orderInfo.items.map((item: any) => 
+                  `${item.quantity}x ${item.product.name}`
+                ).join(', ');
+                
+                const pickupTime = orderInfo.orderDetails?.pickupTime || 'Non spécifié';
+                
+                try {
+                  await createDealForContact(
+                    session.customer_details.email,
+                    session.amount_total / 100, // Stripe amount is in cents
+                    `Commande: ${orderSummary}. Heure de retrait: ${pickupTime} (via Stripe)`
+                  );
+                } catch (hubspotError) {
+                  console.error('Error creating HubSpot deal:', hubspotError);
+                  // Continue anyway, this is not critical
+                }
+              }
             }
             
             setPaymentConfirmed(true);
@@ -270,59 +290,11 @@ function PaymentSuccess() {
             localStorage.removeItem('mpp_order');
             clearCart(); // Clear the cart immediately
           } else {
-            throw new Error(`Le paiement n'a pas pu être confirmé via ${paymentMethod}`);
+            throw new Error('Le paiement Stripe n\'a pas pu être confirmé');
           }
-        } else {
-          // Check if we have a Stripe session ID in the URL (Stripe redirect format)
-          const sessionId = urlParams.get('session_id');
-          if (sessionId) {
-            // Import dynamically to avoid breaking existing code
-            const { getSessionStatus } = await import('./services/stripeService');
-            // Verify payment with Stripe
-            try {
-              const session = await getSessionStatus(sessionId);
-              
-              if (session.payment_status === 'paid') {
-                // Create deal in HubSpot
-                if (orderInfo.orderDetails && orderInfo.orderDetails.email) {
-                  const orderSummary = orderInfo.items.map((item: any) => 
-                    `${item.quantity}x ${item.product.name}`
-                  ).join(', ');
-                  
-                  await createDealForContact(
-                    orderInfo.orderDetails.email,
-                    orderInfo.total,
-                    `Commande: ${orderSummary}. Heure de retrait: ${orderInfo.orderDetails.pickupTime} (via Stripe)`
-                  );
-                  
-                  // Track purchase event
-                  trackPurchase(
-                    sessionId,
-                    orderInfo.total,
-                    orderInfo.items.map((item: any) => ({
-                      productId: item.product.id,
-                      productName: item.product.name,
-                      price: item.product.price + (item.options ? item.options.reduce((sum: number, opt: any) => sum + opt.price, 0) : 0),
-                      quantity: item.quantity
-                    }))
-                  );
-                }
-                
-                setPaymentConfirmed(true);
-                // Clear the stored order and cart
-                localStorage.removeItem('mpp_order');
-                clearCart(); // Clear the cart immediately
-              } else {
-                throw new Error('Le paiement Stripe n\'a pas pu être confirmé');
-              }
-            } catch (stripeError) {
-              console.error('Error confirming Stripe payment:', stripeError);
-              throw new Error('Failed to verify Stripe payment');
-            }
-          } else {
-            // If no payment ID or session ID, we can't confirm the payment
-            throw new Error('No payment identifier found in redirect URL');
-          }
+        } catch (stripeError) {
+          console.error('Error confirming Stripe payment:', stripeError);
+          throw new Error('Failed to verify Stripe payment');
         }
       } catch (error) {
         console.error('Error processing payment success:', error);
@@ -347,24 +319,18 @@ function PaymentSuccess() {
     );
   }
   
-  if (error || !orderData) {
+  if (error) {
     return (
       <div className="max-w-md mx-auto mt-10 p-6 bg-white rounded-lg shadow-lg border-4 border-black">
         <div className="text-center">
-          <h2 className="text-2xl font-bold mb-4">
-            {error ? "Erreur de paiement" : "Aucune commande trouvée"}
-          </h2>
+          <h2 className="text-2xl font-bold mb-4">Erreur de paiement</h2>
           <div className="mb-6 text-red-600 flex justify-center">
             <svg xmlns="http://www.w3.org/2000/svg" className="h-16 w-16" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
             </svg>
           </div>
-          <p className="mb-6">
-            {error 
-              ? `${error}. Veuillez contacter le restaurant.` 
-              : "Nous n'avons pas pu trouver les détails de votre commande."}
-          </p>
-          <Link to="/" className="btn-cartoon bg-amber-400 text-white py-2 px-4 rounded-xl font-cartoon">
+          <p className="mb-6">{error}. Veuillez contacter le restaurant.</p>
+          <Link to="/" className="btn-cartoon bg-amber-400 text-white py-2 px-4 rounded-xl">
             Retour à l'accueil
           </Link>
         </div>
@@ -387,16 +353,24 @@ function PaymentSuccess() {
               </svg>
             </div>
             <p className="mb-2">Merci pour votre commande !</p>
-            <p className="mb-6">Vous recevrez un email de confirmation à {orderData.orderDetails?.email}.</p>
             
             <div className="mb-6 p-4 bg-amber-100 rounded-lg text-left">
               <h3 className="font-bold mb-2">Détails de la commande:</h3>
-              <p>Heure de retrait: {orderData.orderDetails?.pickupTime || "Dès que possible"}</p>
-              <p>Total: {orderData.total?.toFixed(2)}€</p>
-              <p>Méthode de paiement: {orderData.paymentMethod === 'stripe' ? 'Stripe' : 'PayPlug'}</p>
+              {orderData && orderData.orderDetails && (
+                <>
+                  <p>Heure de retrait: {orderData.orderDetails.pickupTime || "Dès que possible"}</p>
+                  {orderData.orderDetails.notes && (
+                    <p>Instructions: {orderData.orderDetails.notes}</p>
+                  )}
+                </>
+              )}
+              {orderData && (
+                <p>Total: {orderData.total?.toFixed(2)}€</p>
+              )}
+              <p>Méthode de paiement: Carte Bancaire</p>
             </div>
             
-            <Link to="/" className="btn-cartoon bg-amber-400 text-white py-2 px-4 rounded-xl font-cartoon">
+            <Link to="/" className="btn-cartoon bg-amber-400 text-white py-2 px-4 rounded-xl">
               Retour à l'accueil
             </Link>
           </>
@@ -435,16 +409,16 @@ function PaymentCancel() {
         
         {orderData && (
           <div className="mb-6 flex justify-center space-x-4">
-            <Link to="/panier" className="btn-cartoon bg-gray-500 text-white py-2 px-4 rounded-xl font-cartoon">
+            <Link to="/panier" className="btn-cartoon bg-gray-500 text-white py-2 px-4 rounded-xl">
               Retour au panier
             </Link>
-            <Link to="/commander" className="btn-cartoon bg-amber-400 text-white py-2 px-4 rounded-xl font-cartoon">
+            <Link to="/commander" className="btn-cartoon bg-amber-400 text-white py-2 px-4 rounded-xl">
               Réessayer
             </Link>
           </div>
         )}
         
-        <Link to="/" className="btn-cartoon bg-amber-400 text-white py-2 px-4 rounded-xl font-cartoon">
+        <Link to="/" className="btn-cartoon bg-amber-400 text-white py-2 px-4 rounded-xl">
           Retour à l'accueil
         </Link>
       </div>

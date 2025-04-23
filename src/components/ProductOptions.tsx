@@ -64,7 +64,7 @@ export default function ProductOptions({
 
   return (
     <div className="mt-6">
-      <h4 className="font-cartoon text-2xl text-amber-900 mb-4">Ajouter des options</h4>
+      <h4 className="text-2xl font-bold text-amber-900 mb-4">Ajouter des options</h4>
       
       {/* Tabs */}
       {loading ? (
@@ -76,7 +76,7 @@ export default function ProductOptions({
           {categories.map((category) => (
             <button
               key={category}
-              className={`px-6 py-3 font-cartoon text-base whitespace-nowrap ${
+              className={`px-6 py-3 font-semibold text-base whitespace-nowrap ${
                 activeTab === category 
                   ? 'bg-amber-400 text-black border-4 border-b-0 border-black rounded-t-xl' 
                   : 'bg-white text-gray-700'
@@ -105,14 +105,14 @@ export default function ProductOptions({
         ) : options[activeTab]?.map((option) => (
           <div 
             key={option.id}
-            className={`flex items-center justify-between p-4 rounded-xl border-3 ${
+            className={`flex items-center justify-between p-4 rounded-xl border-2 ${
               isOptionSelected(option.id) 
                 ? 'border-amber-500 bg-amber-50 shadow-md' 
                 : 'border-gray-200 hover:border-amber-300 hover:bg-amber-50/50'
             }`}
           >
             <div className="flex-1">
-              <p className="font-cartoon text-lg">{option.name}</p>
+              <p className="text-lg font-semibold">{option.name}</p>
               {option.description && (
                 <p className="text-sm text-gray-600 mt-1 line-clamp-2">{option.description}</p>
               )}

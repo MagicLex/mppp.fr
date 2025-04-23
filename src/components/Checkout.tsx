@@ -10,10 +10,8 @@ export default function Checkout() {
   const navigate = useNavigate();
   const { items, total } = useCart();
   const [orderDetails, setOrderDetails] = useState({
-    name: '',
-    phone: '',
-    email: '',
-    pickupTime: ''
+    pickupTime: '',
+    notes: ''
   });
   const [showPaymentOptions, setShowPaymentOptions] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
@@ -49,10 +47,6 @@ export default function Checkout() {
       total
     );
   };
-
-  const handlePaymentSuccess = () => {
-    navigate('/');
-  };
   
   // Handle Stripe payment directly
   const handleStripePayment = async () => {
@@ -63,16 +57,14 @@ export default function Checkout() {
     setIsProcessing(true);
 
     try {
-      // Create/update contact in HubSpot
-      await createOrUpdateContact({
-        email: orderDetails.email,
-        firstname: orderDetails.name,
-        phone: orderDetails.phone,
-        lastorder: new Date().toISOString()
-      });
+      // Create simplified order details for Stripe
+      const stripeOrderDetails = {
+        pickupTime: orderDetails.pickupTime,
+        notes: orderDetails.notes || 'Aucune instruction particulière'
+      };
       
       // Create Stripe checkout session through our Vercel serverless function
-      const session = await createStripeCheckout(items, orderDetails);
+      const session = await createStripeCheckout(items, stripeOrderDetails);
       
       // Redirect to Stripe Checkout
       if (session && session.url) {
@@ -128,69 +120,47 @@ export default function Checkout() {
 
   return (
     <div className="max-w-2xl mx-auto space-y-8">
-      <h2 className="text-3xl font-cartoon text-amber-900">Finaliser la commande</h2>
+      <h2 className="text-3xl font-bold text-amber-900">Finaliser la commande</h2>
       
       {!showPaymentOptions ? (
         <form onSubmit={handleSubmit} className="card-cartoon p-6 space-y-6">
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
-              Nom complet
+              Heure de retrait souhaitée
             </label>
-            <input
-              type="text"
-              required
-              className="w-full px-3 py-2 border-4 border-black rounded-xl"
-              value={orderDetails.name}
-              onChange={(e) => setOrderDetails({ ...orderDetails, name: e.target.value })}
-            />
-          </div>
-          
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Téléphone
-            </label>
-            <input
-              type="tel"
-              required
-              className="w-full px-3 py-2 border-4 border-black rounded-xl"
-              value={orderDetails.phone}
-              onChange={(e) => setOrderDetails({ ...orderDetails, phone: e.target.value })}
-            />
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Email
-            </label>
-            <input
-              type="email"
-              required
-              className="w-full px-3 py-2 border-4 border-black rounded-xl"
-              value={orderDetails.email}
-              onChange={(e) => setOrderDetails({ ...orderDetails, email: e.target.value })}
-            />
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Heure de retrait et instructions
-            </label>
-            <input
-              type="text"
-              placeholder="ex: 19h30, dès que possible, etc."
+            <select
               className="w-full px-3 py-2 border-4 border-black rounded-xl"
               value={orderDetails.pickupTime}
               onChange={(e) => setOrderDetails({ ...orderDetails, pickupTime: e.target.value })}
               required
-            />
+            >
+              <option value="">Choisir une heure</option>
+              <option value="Dès que possible">Dès que possible (~15 min)</option>
+              {generateTimeSlots().map(slot => (
+                <option key={slot} value={slot}>{slot}</option>
+              ))}
+            </select>
             <p className="text-sm text-gray-500 italic mt-1">
-              Préparation ~15 minutes après commande. Vous pouvez préciser vos contraintes horaires.
+              Préparation en 15 minutes environ après commande.
             </p>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Instructions spéciales (optionnel)
+            </label>
+            <textarea
+              placeholder="Ex: allergies, préférences, etc."
+              className="w-full px-3 py-2 border-4 border-black rounded-xl"
+              value={orderDetails.notes}
+              onChange={(e) => setOrderDetails({ ...orderDetails, notes: e.target.value })}
+              rows={3}
+            />
           </div>
 
           {/* Order Summary */}
           <div className="pt-6 border-t-4 border-black">
-            <h3 className="text-xl font-cartoon text-amber-900 mb-4">Récapitulatif de la commande</h3>
+            <h3 className="text-xl font-bold text-amber-900 mb-4">Récapitulatif de la commande</h3>
             <div className="space-y-2 mb-4">
               {items.map((item) => (
                 <div key={item.product.id} className="flex justify-between">
@@ -212,13 +182,13 @@ export default function Checkout() {
                 </div>
               ))}
             </div>
-            <div className="flex justify-between items-center text-xl font-cartoon mb-6">
+            <div className="flex justify-between items-center text-xl font-bold mb-6">
               <span>Total à payer</span>
               <span className="price-tag">{total.toFixed(2)}€</span>
             </div>
             <button
               type="submit"
-              className="w-full btn-cartoon bg-amber-400 text-black py-3 px-4 rounded-2xl font-cartoon text-lg border-4 border-black"
+              className="w-full btn-cartoon bg-amber-400 text-black py-3 px-4 rounded-2xl text-lg border-4 border-black"
               style={{ boxShadow: '4px 4px 0 #000' }}
             >
               Continuer pour payer
@@ -227,25 +197,27 @@ export default function Checkout() {
         </form>
       ) : (
         <div className="card-cartoon p-6 space-y-6">
-          <h3 className="text-xl font-cartoon text-amber-900">Paiement</h3>
+          <h3 className="text-xl font-bold text-amber-900">Continuer vers le paiement</h3>
           <div className="space-y-4">
             <div className="bg-amber-100 p-4 rounded-xl border-4 border-black">
-              <h4 className="font-cartoon text-amber-900 mb-2">Détails de la commande</h4>
-              <p><strong>Nom:</strong> {orderDetails.name}</p>
-              <p><strong>Téléphone:</strong> {orderDetails.phone}</p>
-              <p><strong>Email:</strong> {orderDetails.email}</p>
+              <h4 className="font-bold text-amber-900 mb-2">Détails de la commande</h4>
               <p><strong>Heure de retrait:</strong> {orderDetails.pickupTime}</p>
+              {orderDetails.notes && (
+                <p><strong>Instructions:</strong> {orderDetails.notes}</p>
+              )}
             </div>
             
             <div className="space-y-6">
               <div className="p-4 border-4 border-black rounded-2xl bg-white space-y-4">
-                <h3 className="text-xl font-cartoon text-center mb-4">Paiement</h3>
+                <p className="text-gray-700 mb-4">
+                  Vous allez être redirigé vers Stripe pour finaliser votre paiement. Vous pourrez y saisir vos coordonnées et informations de carte bancaire en toute sécurité.
+                </p>
                 
                 {/* Stripe Payment Button */}
                 <button
                   onClick={handleStripePayment}
                   disabled={isProcessing}
-                  className="w-full btn-cartoon bg-blue-600 text-white py-3 px-4 rounded-2xl font-cartoon text-lg border-4 border-black mb-4 hover:bg-blue-700 transition-colors"
+                  className="w-full btn-cartoon bg-blue-600 text-white py-3 px-4 rounded-2xl text-lg border-4 border-black mb-4 hover:bg-blue-700 transition-colors"
                   style={{ boxShadow: '4px 4px 0 #000' }}
                 >
                   {isProcessing ? 'Traitement en cours...' : 'Payer par Carte Bancaire'}
