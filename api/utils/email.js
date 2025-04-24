@@ -6,8 +6,8 @@ import nodemailer from 'nodemailer';
 // Create a nodemailer transporter with OVH SMTP settings
 const transporter = nodemailer.createTransport({
   host: 'ssl0.ovh.net',
-  port: 587,
-  secure: false, // false for TLS - port 587
+  port: 465,
+  secure: true, // true for SSL on port 465
   auth: {
     user: process.env.EMAIL_USER,
     pass: process.env.EMAIL_PASSWORD
@@ -141,8 +141,8 @@ export async function sendOrderEmail(order) {
     
     // Prepare email
     const mailOptions = {
-      from: `"MPPP Commande" <${process.env.EMAIL_USER}>`,
-      to: process.env.ORDER_EMAIL || 'contact@mppp.fr',
+      from: `"Mon P'tit Poulet - Commandes" <${process.env.EMAIL_USER}>`,
+      to: process.env.ORDER_EMAIL || 'commandes@mppp.fr',
       subject: `🧾 Nouvelle commande #${order.id.substring(0, 8)}`,
       text: formatPlain(order),
       html: formatHTML(order)
