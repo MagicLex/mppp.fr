@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { HashRouter, Routes, Route, useLocation, Link, Navigate } from 'react-router-dom';
 import { Toaster } from 'react-hot-toast';
 import Header from './components/Header';
+import CompactHeader from './components/CompactHeader';
 import Menu from './components/Menu';
 import Cart from './components/Cart';
 import Checkout from './components/Checkout';
@@ -28,16 +29,31 @@ function AnalyticsTracker() {
   return null;
 }
 
-function App() {
-  // Splash screen removed, replaced with maintenance banner
+// Header component that adapts based on route
+function HeaderWithRoute() {
+  const location = useLocation();
+  const path = location.pathname;
+  
+  // Use compact header for cart, checkout and payment pages
+  if (path === '/panier') {
+    return <CompactHeader title="Votre Panier" showBackButton={true} />;
+  } else if (path === '/commander') {
+    return <CompactHeader title="Commander" showBackButton={true} />;
+  } else if (path.includes('/payment')) {
+    return <CompactHeader title="Paiement" showBackButton={false} />;
+  }
+  
+  // Use full header for all other pages
+  return <Header />;
+}
 
+function App() {
   return (
     <HashRouter>
       <CartProvider>
         <div className="min-h-screen bg-amber-50">
-          {/* Maintenance Banner */}
           <AnalyticsTracker />
-          <Header />
+          <HeaderWithRoute />
           <main className="container mx-auto px-4 pb-12">
             <Routes>
               <Route path="/" element={<Menu />} />
@@ -309,7 +325,7 @@ function PaymentSuccess() {
   
   if (isProcessing) {
     return (
-      <div className="max-w-md mx-auto mt-10 p-6 bg-white rounded-lg shadow-lg border-4 border-black">
+      <div className="max-w-md mx-auto mt-6 p-6 bg-white rounded-lg shadow-lg border-4 border-black">
         <div className="text-center">
           <h2 className="text-2xl font-bold mb-4">Traitement de votre paiement...</h2>
           <p className="mb-6">Veuillez patienter pendant que nous confirmons votre commande.</p>
@@ -321,7 +337,7 @@ function PaymentSuccess() {
   
   if (error) {
     return (
-      <div className="max-w-md mx-auto mt-10 p-6 bg-white rounded-lg shadow-lg border-4 border-black">
+      <div className="max-w-md mx-auto mt-6 p-6 bg-white rounded-lg shadow-lg border-4 border-black">
         <div className="text-center">
           <h2 className="text-2xl font-bold mb-4">Erreur de paiement</h2>
           <div className="mb-6 text-red-600 flex justify-center">
@@ -339,7 +355,7 @@ function PaymentSuccess() {
   }
   
   return (
-    <div className="max-w-md mx-auto mt-10 p-6 bg-white rounded-lg shadow-lg border-4 border-black">
+    <div className="max-w-md mx-auto mt-6 p-6 bg-white rounded-lg shadow-lg border-4 border-black">
       <div className="text-center">
         <h2 className="text-2xl font-bold mb-4">
           {paymentConfirmed ? "Commande confirmée !" : "Traitement de votre commande..."}
@@ -406,7 +422,7 @@ function PaymentCancel() {
   }, []);
   
   return (
-    <div className="max-w-md mx-auto mt-10 p-6 bg-white rounded-lg shadow-lg border-4 border-black">
+    <div className="max-w-md mx-auto mt-6 p-6 bg-white rounded-lg shadow-lg border-4 border-black">
       <div className="text-center">
         <h2 className="text-2xl font-bold mb-4">Paiement annulé</h2>
         <div className="mb-6 text-red-600 flex justify-center">

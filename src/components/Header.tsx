@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 import { ShoppingCart, Clock, MapPin, AlertCircle } from 'lucide-react';
 import { useCart } from '../context/CartContext';
 import { isRestaurantOpen, getRestaurantStatus } from '../data/options';
@@ -8,6 +8,7 @@ export default function Header() {
   const { items } = useCart();
   const itemCount = items.reduce((sum, item) => sum + item.quantity, 0);
   const [restaurantStatus, setRestaurantStatus] = useState(getRestaurantStatus());
+  const location = useLocation();
   
   // Check if restaurant is open periodically
   useEffect(() => {
@@ -150,31 +151,33 @@ export default function Header() {
         </div>
       </header>
 
-      {/* Image garde as background with mascot on top - no spacing from header */}
-      <div className="mb-24 relative border-b-4 border-black">
-        {/* Full width background image */}
-        <div className="w-full overflow-hidden">
-          <img 
-            src="/images/menu/image_garde.jpeg" 
-            alt="Background" 
-            className="w-full object-cover h-[20rem] md:h-[40rem]" 
-          />
-        </div>
-        
-        {/* Mascot with circular background */}
-        <div className="absolute inset-0 flex justify-center items-center pointer-events-none">
-          {/* Circular background with black border - using amber-300 color to match header */}
-          <div className="rounded-full bg-amber-300 border-4 border-black h-[16rem] w-[16rem] md:h-[22rem] md:w-[22rem] flex items-center justify-center relative">
-            {/* Mascot image - 50% bigger than container */}
+      {/* Image garde as background with mascot on top - only shown on homepage */}
+      {location.pathname === '/' && (
+        <div className="mb-24 relative border-b-4 border-black">
+          {/* Full width background image */}
+          <div className="w-full overflow-hidden">
             <img 
-              src="/images/logos/mascotte.png" 
-              alt="Mascotte" 
-              className="absolute w-[150%] h-auto" 
-              style={{ transform: 'translateY(-10%)' }}
+              src="/images/menu/image_garde.jpeg" 
+              alt="Background" 
+              className="w-full object-cover h-[20rem] md:h-[40rem]" 
             />
           </div>
+          
+          {/* Mascot with circular background */}
+          <div className="absolute inset-0 flex justify-center items-center pointer-events-none">
+            {/* Circular background with black border - using amber-300 color to match header */}
+            <div className="rounded-full bg-amber-300 border-4 border-black h-[16rem] w-[16rem] md:h-[22rem] md:w-[22rem] flex items-center justify-center relative">
+              {/* Mascot image - 50% bigger than container */}
+              <img 
+                src="/images/logos/mascotte.png" 
+                alt="Mascotte" 
+                className="absolute w-[150%] h-auto" 
+                style={{ transform: 'translateY(-10%)' }}
+              />
+            </div>
+          </div>
         </div>
-      </div>
+      )}
     </>
   );
 }

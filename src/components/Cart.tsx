@@ -44,8 +44,7 @@ export default function Cart() {
   };
 
   return (
-    <div className="space-y-8">
-      <h2 className="text-3xl font-bold text-amber-900">Votre Panier</h2>
+    <div className="space-y-6 mt-4">
       <div className="bg-white rounded-lg shadow-md p-6">
         {items.map((item) => (
           <div key={item.product.id} className="py-4 border-b last:border-0">

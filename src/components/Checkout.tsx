@@ -153,8 +153,7 @@ export default function Checkout() {
   };
 
   return (
-    <div className="max-w-2xl mx-auto space-y-8">
-      <h2 className="text-3xl font-bold text-amber-900">Finaliser la commande</h2>
+    <div className="max-w-2xl mx-auto space-y-6 mt-4">
       
       {!showPaymentOptions ? (
         <form onSubmit={handleSubmit} className="card-cartoon p-6 space-y-6">
