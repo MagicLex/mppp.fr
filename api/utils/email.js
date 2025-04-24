@@ -94,6 +94,7 @@ function formatHTML(order) {
           .items { background-color: #fff; padding: 15px; border-radius: 5px; }
           .footer { text-align: center; font-size: 0.8em; color: #777; margin-top: 30px; }
           .highlight { background-color: #FFF0C5; padding: 10px; border-radius: 5px; border-left: 4px solid #F2B705; margin-bottom: 15px; }
+          .time-block { background-color: #F04D4E; color: white; font-size: 24px; padding: 15px; text-align: center; border-radius: 5px; margin-bottom: 15px; }
           .btn { display: inline-block; padding: 10px 20px; background-color: #F2B705; color: #000; text-decoration: none; border-radius: 5px; font-weight: bold; margin-bottom: 15px; }
           table { width: 100%; border-collapse: collapse; }
           table th, table td { padding: 8px; text-align: left; border-bottom: 1px solid #ddd; }
@@ -102,14 +103,17 @@ function formatHTML(order) {
       </head>
       <body>
         <div class="container">
+          <div class="time-block">
+            🕒 À PRÉPARER POUR ${readyTimeEstimate}
+          </div>
+        
           <div class="header">
             <h1>Nouvelle Commande #${order.id.substring(0, 8)}</h1>
             <p>${order.date} à ${order.time}</p>
           </div>
           
           <div class="highlight">
-            <h3 style="margin-top: 0; margin-bottom: 10px;">⏰ Retrait demandé: ${readablePickupTime}</h3>
-            ${readyTimeEstimate ? `<p style="margin: 0;"><strong>Heure de préparation (minimum 25 min):</strong> ${readyTimeEstimate}</p>` : ''}
+            <p style="margin: 0; font-size: 16px;"><strong>Information:</strong> Le client a demandé un retrait ${readablePickupTime.toLowerCase()}</p>
           </div>
           
           <div class="section">
@@ -212,8 +216,8 @@ function formatPlain(order) {
 NOUVELLE COMMANDE #${order.id.substring(0, 8)}
 ${order.date} à ${order.time}
 
-⏰ RETRAIT DEMANDÉ: ${readablePickupTime}
-${readyTimeEstimate ? `HEURE DE PRÉPARATION (minimum 25 min): ${readyTimeEstimate}` : ''}
+⏰ COMMANDE À PRÉPARER POUR: ${readyTimeEstimate}
+Note: Le client a demandé ${readablePickupTime.toLowerCase()}
 
 DÉTAILS CLIENT
 -------------
