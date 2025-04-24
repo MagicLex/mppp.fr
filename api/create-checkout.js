@@ -35,89 +35,56 @@ const RESTAURANT_CONFIG = {
 function isRestaurantOpen() {
   const now = new Date();
   
-  // Adjust for France time zone (UTC+2 in summer)
-  // This ensures consistent behavior regardless of server timezone
-  // Retrieve time in local format (France - CEST/CET)
-  const options = { timeZone: 'Europe/Paris', hour12: false };
-  const franceTimeString = now.toLocaleString('fr-FR', options);
-  const franceTime = new Date(franceTimeString);
+  // Get current hour and day in France timezone
+  const options = { timeZone: 'Europe/Paris' };
+  const franceDate = new Date(now.toLocaleString('en-US', options));
+  const franceHour = franceDate.getHours();
+  const franceMinute = franceDate.getMinutes();
+  const franceDay = franceDate.getDay();
+
+  // Simple debug output
+  console.log(`France time: ${franceHour}:${franceMinute}, Day: ${franceDay}`);
   
-  // Log full date information for debugging
-  console.log(`Server time: ${now.toString()}`);
-  console.log(`France time: ${franceTimeString}`);
-  
-  // French time format is DD/MM/YYYY HH:MM:SS
-  const dateParts = franceTimeString.split(' ')[0].split('/');
-  const timeParts = franceTimeString.split(' ')[1].split(':');
-  
-  // Create a new date object using the date parts (French format)
-  const frenchDate = new Date(
-    parseInt(dateParts[2], 10),     // Year
-    parseInt(dateParts[1], 10) - 1, // Month (0-indexed)
-    parseInt(dateParts[0], 10)      // Day
-  );
-  
-  const currentHour = parseInt(timeParts[0], 10);
-  const currentMinute = parseInt(timeParts[1], 10);
-  const currentDay = frenchDate.getDay(); // 0 = Sunday, 1 = Monday, etc.
-  
-  // Convert current time to decimal hours (e.g., 11:30 -> 11.5)
-  const currentTimeDecimal = currentHour + (currentMinute / 60);
-  
-  // Debug time calculation
-  console.log(`Parsed time - Hour: ${currentHour}, Minute: ${currentMinute}, Day: ${currentDay}`);
-  console.log(`Current decimal time: ${currentTimeDecimal.toFixed(2)}`);
-  
-  // Check if restaurant is closed today
-  if (RESTAURANT_CONFIG.openingHours.closedDays.includes(currentDay)) {
-    console.log(`Restaurant is closed today (day ${currentDay})`);
+  // Is it Monday? We're closed
+  if (franceDay === 1) {
     return false;
   }
   
-  // Check if it's Sunday
-  if (currentDay === 0) {
-    const sundayOpening = RESTAURANT_CONFIG.openingHours.sunday.opening;
-    const sundayClosing = RESTAURANT_CONFIG.openingHours.sunday.closing;
+  // Is it Sunday?
+  if (franceDay === 0) {
+    const openTime = RESTAURANT_CONFIG.openingHours.sunday.opening;
+    const closeTime = RESTAURANT_CONFIG.openingHours.sunday.closing;
     
-    // Calculate effective open/close times with the buffer periods
-    const effectiveOpeningTime = sundayOpening - (RESTAURANT_CONFIG.preorderMinutes / 60);
-    const effectiveClosingTime = sundayClosing - (RESTAURANT_CONFIG.lastOrderMinutes / 60);
+    // Convert to decimal time for simpler comparison (e.g., 11:30 = 11.5)
+    const currentDecimal = franceHour + (franceMinute / 60);
     
-    console.log(`Sunday - Current time: ${currentTimeDecimal.toFixed(2)}, Opening: ${effectiveOpeningTime.toFixed(2)}, Closing: ${effectiveClosingTime.toFixed(2)}`);
+    // Can order 30 min before opening until 30 min before closing
+    const effectiveOpenTime = openTime - (RESTAURANT_CONFIG.preorderMinutes / 60);
+    const effectiveCloseTime = closeTime - (RESTAURANT_CONFIG.lastOrderMinutes / 60);
     
-    // Debug decision
-    const isOpen = currentTimeDecimal >= effectiveOpeningTime && currentTimeDecimal <= effectiveClosingTime;
-    console.log(`Sunday service open: ${isOpen}`);
-    return isOpen;
+    return currentDecimal >= effectiveOpenTime && currentDecimal <= effectiveCloseTime;
   }
   
-  // If it's a weekday (Tuesday-Saturday)
-  // Check if current time falls within lunch or dinner service with buffer periods
-  const lunchOpening = RESTAURANT_CONFIG.openingHours.weekdays.lunch.opening;
-  const lunchClosing = RESTAURANT_CONFIG.openingHours.weekdays.lunch.closing;
-  const dinnerOpening = RESTAURANT_CONFIG.openingHours.weekdays.dinner.opening;
-  const dinnerClosing = RESTAURANT_CONFIG.openingHours.weekdays.dinner.closing;
+  // It's Tuesday-Saturday - check lunch and dinner hours
+  const currentDecimal = franceHour + (franceMinute / 60);
   
-  // Calculate effective open/close times for lunch service
-  const effectiveLunchOpeningTime = lunchOpening - (RESTAURANT_CONFIG.preorderMinutes / 60);
-  const effectiveLunchClosingTime = lunchClosing - (RESTAURANT_CONFIG.lastOrderMinutes / 60);
+  // Lunch service
+  const lunchOpen = RESTAURANT_CONFIG.openingHours.weekdays.lunch.opening;
+  const lunchClose = RESTAURANT_CONFIG.openingHours.weekdays.lunch.closing;
+  const effectiveLunchOpen = lunchOpen - (RESTAURANT_CONFIG.preorderMinutes / 60);
+  const effectiveLunchClose = lunchClose - (RESTAURANT_CONFIG.lastOrderMinutes / 60);
   
-  // Calculate effective open/close times for dinner service
-  const effectiveDinnerOpeningTime = dinnerOpening - (RESTAURANT_CONFIG.preorderMinutes / 60);
-  const effectiveDinnerClosingTime = dinnerClosing - (RESTAURANT_CONFIG.lastOrderMinutes / 60);
+  // Dinner service  
+  const dinnerOpen = RESTAURANT_CONFIG.openingHours.weekdays.dinner.opening;
+  const dinnerClose = RESTAURANT_CONFIG.openingHours.weekdays.dinner.closing;
+  const effectiveDinnerOpen = dinnerOpen - (RESTAURANT_CONFIG.preorderMinutes / 60);
+  const effectiveDinnerClose = dinnerClose - (RESTAURANT_CONFIG.lastOrderMinutes / 60);
   
-  // Check if current time falls within lunch or dinner service
-  const isLunchService = currentTimeDecimal >= effectiveLunchOpeningTime && currentTimeDecimal <= effectiveLunchClosingTime;
-  const isDinnerService = currentTimeDecimal >= effectiveDinnerOpeningTime && currentTimeDecimal <= effectiveDinnerClosingTime;
+  // Check if we're in lunch or dinner service time window
+  const isLunchOpen = currentDecimal >= effectiveLunchOpen && currentDecimal <= effectiveLunchClose;
+  const isDinnerOpen = currentDecimal >= effectiveDinnerOpen && currentDecimal <= effectiveDinnerClose;
   
-  console.log(`Weekday ${currentDay} - Current time: ${currentTimeDecimal.toFixed(2)}`);
-  console.log(`Lunch: Opening: ${effectiveLunchOpeningTime.toFixed(2)}, Closing: ${effectiveLunchClosingTime.toFixed(2)}, Is lunch open: ${isLunchService}`);
-  console.log(`Dinner: Opening: ${effectiveDinnerOpeningTime.toFixed(2)}, Closing: ${effectiveDinnerClosingTime.toFixed(2)}, Is dinner open: ${isDinnerService}`);
-  
-  // DEBUG: TEMPORARY OVERRIDE - always return true
-  // return true;
-  
-  return isLunchService || isDinnerService;
+  return isLunchOpen || isDinnerOpen;
 }
 
 export default async function handler(req, res) {
@@ -126,36 +93,17 @@ export default async function handler(req, res) {
   }
 
   try {
-    // Check for override flag for development/testing
+    // Allow override for testing
     const override = req.query.override === 'true' || req.body.override === true;
     
     // Check if restaurant is currently accepting orders
     const restaurantOpen = isRestaurantOpen();
-    console.log(`Restaurant open for orders: ${restaurantOpen}`);
-    console.log(`Override flag: ${override}`);
     
     if (!restaurantOpen && !override) {
-      // Get current day of week
-      const currentDay = new Date().getDay();
-      let message = '';
-      
-      // Provide a more specific message based on the day
-      if (RESTAURANT_CONFIG.openingHours.closedDays.includes(currentDay)) {
-        message = "Le restaurant est fermé le lundi. Horaires d'ouverture: Mardi-Samedi: 12h-14h / 19h-21h | Dimanche: 12h-21h";
-      } else if (currentDay === 0) { // Sunday
-        message = "Le restaurant n'accepte pas de commandes pour le moment. Horaires du dimanche: 12h-21h (commandes 30min avant la fermeture)";
-      } else {
-        message = "Le restaurant n'accepte pas de commandes pour le moment. Horaires: Mardi-Samedi: 12h-14h / 19h-21h (commandes 30min avant la fermeture)";
-      }
-      
       return res.status(400).json({ 
         error: 'Restaurant is closed',
-        message
+        message: "Le restaurant n'accepte pas de commandes pour le moment. Horaires: Mardi-Samedi: 12h-14h / 19h-21h (commandes 30min avant la fermeture)"
       });
-    }
-    
-    if (!restaurantOpen && override) {
-      console.log('WARNING: Restaurant is closed but override flag is set. Allowing order to proceed.');
     }
     
     const { items, orderDetails } = req.body;

@@ -30,8 +30,6 @@ export const RESTAURANT_CONFIG = {
 
 export function isRestaurantOpen(): boolean {
   const now = new Date();
-  
-  // Get hours, minutes, and day directly (client browser will use local time)
   const currentHour = now.getHours();
   const currentMinute = now.getMinutes();
   const currentDay = now.getDay(); // 0 = Sunday, 1 = Monday, etc.
@@ -39,61 +37,41 @@ export function isRestaurantOpen(): boolean {
   // Convert current time to decimal hours (e.g., 11:30 -> 11.5)
   const currentTimeDecimal = currentHour + (currentMinute / 60);
   
-  // Debug information to help troubleshoot timezone issues
-  console.log(`Browser time: ${now.toString()}`);
-  console.log(`Local time components - Day: ${currentDay}, Hour: ${currentHour}, Minute: ${currentMinute}`);
-  console.log(`Decimal time: ${currentTimeDecimal.toFixed(2)}`);
-  
-  // Check if restaurant is closed today
+  // Is it Monday? We're closed
   if (RESTAURANT_CONFIG.openingHours.closedDays.includes(currentDay)) {
-    console.log(`Restaurant is closed today (day ${currentDay})`);
     return false;
   }
   
-  // Check if it's Sunday
+  // Is it Sunday?
   if (currentDay === 0) {
-    const sundayOpening = RESTAURANT_CONFIG.openingHours.sunday.opening;
-    const sundayClosing = RESTAURANT_CONFIG.openingHours.sunday.closing;
+    const openTime = RESTAURANT_CONFIG.openingHours.sunday.opening;
+    const closeTime = RESTAURANT_CONFIG.openingHours.sunday.closing;
     
-    // Calculate effective open/close times with the buffer periods
-    const effectiveOpeningTime = sundayOpening - (RESTAURANT_CONFIG.preorderMinutes / 60);
-    const effectiveClosingTime = sundayClosing - (RESTAURANT_CONFIG.lastOrderMinutes / 60);
+    // Can order 30 min before opening until 30 min before closing
+    const effectiveOpenTime = openTime - (RESTAURANT_CONFIG.preorderMinutes / 60);
+    const effectiveCloseTime = closeTime - (RESTAURANT_CONFIG.lastOrderMinutes / 60);
     
-    console.log(`Sunday - Current time: ${currentTimeDecimal.toFixed(2)}, Opening: ${effectiveOpeningTime.toFixed(2)}, Closing: ${effectiveClosingTime.toFixed(2)}`);
-    
-    // Debug decision
-    const isOpen = currentTimeDecimal >= effectiveOpeningTime && currentTimeDecimal <= effectiveClosingTime;
-    console.log(`Sunday service open: ${isOpen}`);
-    return isOpen;
+    return currentTimeDecimal >= effectiveOpenTime && currentTimeDecimal <= effectiveCloseTime;
   }
   
-  // If it's a weekday (Tuesday-Saturday)
-  // Check if current time falls within lunch or dinner service with buffer periods
-  const lunchOpening = RESTAURANT_CONFIG.openingHours.weekdays.lunch.opening;
-  const lunchClosing = RESTAURANT_CONFIG.openingHours.weekdays.lunch.closing;
-  const dinnerOpening = RESTAURANT_CONFIG.openingHours.weekdays.dinner.opening;
-  const dinnerClosing = RESTAURANT_CONFIG.openingHours.weekdays.dinner.closing;
+  // It's Tuesday-Saturday - check lunch and dinner hours
+  // Lunch service
+  const lunchOpen = RESTAURANT_CONFIG.openingHours.weekdays.lunch.opening;
+  const lunchClose = RESTAURANT_CONFIG.openingHours.weekdays.lunch.closing;
+  const effectiveLunchOpen = lunchOpen - (RESTAURANT_CONFIG.preorderMinutes / 60);
+  const effectiveLunchClose = lunchClose - (RESTAURANT_CONFIG.lastOrderMinutes / 60);
   
-  // Calculate effective open/close times for lunch service
-  const effectiveLunchOpeningTime = lunchOpening - (RESTAURANT_CONFIG.preorderMinutes / 60);
-  const effectiveLunchClosingTime = lunchClosing - (RESTAURANT_CONFIG.lastOrderMinutes / 60);
+  // Dinner service  
+  const dinnerOpen = RESTAURANT_CONFIG.openingHours.weekdays.dinner.opening;
+  const dinnerClose = RESTAURANT_CONFIG.openingHours.weekdays.dinner.closing;
+  const effectiveDinnerOpen = dinnerOpen - (RESTAURANT_CONFIG.preorderMinutes / 60);
+  const effectiveDinnerClose = dinnerClose - (RESTAURANT_CONFIG.lastOrderMinutes / 60);
   
-  // Calculate effective open/close times for dinner service
-  const effectiveDinnerOpeningTime = dinnerOpening - (RESTAURANT_CONFIG.preorderMinutes / 60);
-  const effectiveDinnerClosingTime = dinnerClosing - (RESTAURANT_CONFIG.lastOrderMinutes / 60);
+  // Check if we're in lunch or dinner service time window
+  const isLunchOpen = currentTimeDecimal >= effectiveLunchOpen && currentTimeDecimal <= effectiveLunchClose;
+  const isDinnerOpen = currentTimeDecimal >= effectiveDinnerOpen && currentTimeDecimal <= effectiveDinnerClose;
   
-  // Check if current time falls within lunch or dinner service
-  const isLunchService = currentTimeDecimal >= effectiveLunchOpeningTime && currentTimeDecimal <= effectiveLunchClosingTime;
-  const isDinnerService = currentTimeDecimal >= effectiveDinnerOpeningTime && currentTimeDecimal <= effectiveDinnerClosingTime;
-  
-  console.log(`Weekday ${currentDay} - Current time: ${currentTimeDecimal.toFixed(2)}`);
-  console.log(`Lunch: Opening: ${effectiveLunchOpeningTime.toFixed(2)}, Closing: ${effectiveLunchClosingTime.toFixed(2)}, Is lunch open: ${isLunchService}`);
-  console.log(`Dinner: Opening: ${effectiveDinnerOpeningTime.toFixed(2)}, Closing: ${effectiveDinnerClosingTime.toFixed(2)}, Is dinner open: ${isDinnerService}`);
-  
-  // DEBUG: Uncomment the following line to override for testing
-  // return true;
-  
-  return isLunchService || isDinnerService;
+  return isLunchOpen || isDinnerOpen;
 }
 
 export function getRestaurantStatus(): {isOpen: boolean; message: string} {
