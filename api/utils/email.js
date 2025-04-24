@@ -63,13 +63,20 @@ function formatHTML(order) {
   let readyTimeEstimate = '';
   const orderDateTime = new Date(`${order.date.split('/').reverse().join('-')}T${order.time}`);
   
+  // Ensure minimum preparation time of 25 minutes
+  const minPreparationMinutes = 25;
+  
   if (order.pickup_time === 'ASAP') {
-    // Add 15 minutes to the order time
-    const readyTime = new Date(orderDateTime.getTime() + 15 * 60000);
+    // Use minimum 25 minutes for ASAP orders
+    const readyTime = new Date(orderDateTime.getTime() + minPreparationMinutes * 60000);
     readyTimeEstimate = readyTime.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
   } else if (order.pickup_time.endsWith('min')) {
     // Extract the number of minutes
-    const minutes = parseInt(order.pickup_time.replace('min', ''));
+    let minutes = parseInt(order.pickup_time.replace('min', ''));
+    
+    // Enforce minimum preparation time
+    minutes = Math.max(minutes, minPreparationMinutes);
+    
     const readyTime = new Date(orderDateTime.getTime() + minutes * 60000);
     readyTimeEstimate = readyTime.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
   }
@@ -101,8 +108,8 @@ function formatHTML(order) {
           </div>
           
           <div class="highlight">
-            <h3 style="margin-top: 0; margin-bottom: 10px;">⏰ Retrait prévu: ${readablePickupTime}</h3>
-            ${readyTimeEstimate ? `<p style="margin: 0;">Heure estimée de préparation: ${readyTimeEstimate}</p>` : ''}
+            <h3 style="margin-top: 0; margin-bottom: 10px;">⏰ Retrait demandé: ${readablePickupTime}</h3>
+            ${readyTimeEstimate ? `<p style="margin: 0;"><strong>Heure de préparation (minimum 25 min):</strong> ${readyTimeEstimate}</p>` : ''}
           </div>
           
           <div class="section">
@@ -174,13 +181,20 @@ function formatPlain(order) {
   let readyTimeEstimate = '';
   const orderDateTime = new Date(`${order.date.split('/').reverse().join('-')}T${order.time}`);
   
+  // Ensure minimum preparation time of 25 minutes
+  const minPreparationMinutes = 25;
+  
   if (order.pickup_time === 'ASAP') {
-    // Add 15 minutes to the order time
-    const readyTime = new Date(orderDateTime.getTime() + 15 * 60000);
+    // Use minimum 25 minutes for ASAP orders
+    const readyTime = new Date(orderDateTime.getTime() + minPreparationMinutes * 60000);
     readyTimeEstimate = readyTime.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
   } else if (order.pickup_time.endsWith('min')) {
     // Extract the number of minutes
-    const minutes = parseInt(order.pickup_time.replace('min', ''));
+    let minutes = parseInt(order.pickup_time.replace('min', ''));
+    
+    // Enforce minimum preparation time
+    minutes = Math.max(minutes, minPreparationMinutes);
+    
     const readyTime = new Date(orderDateTime.getTime() + minutes * 60000);
     readyTimeEstimate = readyTime.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
   }
@@ -198,8 +212,8 @@ function formatPlain(order) {
 NOUVELLE COMMANDE #${order.id.substring(0, 8)}
 ${order.date} à ${order.time}
 
-⏰ RETRAIT PRÉVU: ${readablePickupTime}
-${readyTimeEstimate ? `Heure estimée de préparation: ${readyTimeEstimate}` : ''}
+⏰ RETRAIT DEMANDÉ: ${readablePickupTime}
+${readyTimeEstimate ? `HEURE DE PRÉPARATION (minimum 25 min): ${readyTimeEstimate}` : ''}
 
 DÉTAILS CLIENT
 -------------
