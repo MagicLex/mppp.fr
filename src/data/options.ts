@@ -39,6 +39,7 @@ export function isRestaurantOpen(): boolean {
   
   // Check if restaurant is closed today
   if (RESTAURANT_CONFIG.openingHours.closedDays.includes(currentDay)) {
+    console.log(`Restaurant is closed today (${currentDay})`);
     return false;
   }
   
@@ -50,6 +51,8 @@ export function isRestaurantOpen(): boolean {
     // Calculate effective open/close times with the buffer periods
     const effectiveOpeningTime = sundayOpening - (RESTAURANT_CONFIG.preorderMinutes / 60);
     const effectiveClosingTime = sundayClosing - (RESTAURANT_CONFIG.lastOrderMinutes / 60);
+    
+    console.log(`Sunday - Current time: ${currentTimeDecimal.toFixed(2)}, Opening: ${effectiveOpeningTime.toFixed(2)}, Closing: ${effectiveClosingTime.toFixed(2)}`);
     
     return currentTimeDecimal >= effectiveOpeningTime && currentTimeDecimal <= effectiveClosingTime;
   }
@@ -72,6 +75,10 @@ export function isRestaurantOpen(): boolean {
   // Check if current time falls within lunch or dinner service
   const isLunchService = currentTimeDecimal >= effectiveLunchOpeningTime && currentTimeDecimal <= effectiveLunchClosingTime;
   const isDinnerService = currentTimeDecimal >= effectiveDinnerOpeningTime && currentTimeDecimal <= effectiveDinnerClosingTime;
+  
+  console.log(`Weekday ${currentDay} - Current time: ${currentTimeDecimal.toFixed(2)}`);
+  console.log(`Lunch: Opening: ${effectiveLunchOpeningTime.toFixed(2)}, Closing: ${effectiveLunchClosingTime.toFixed(2)}, Is lunch open: ${isLunchService}`);
+  console.log(`Dinner: Opening: ${effectiveDinnerOpeningTime.toFixed(2)}, Closing: ${effectiveDinnerClosingTime.toFixed(2)}, Is dinner open: ${isDinnerService}`);
   
   return isLunchService || isDinnerService;
 }
@@ -108,7 +115,7 @@ export function getRestaurantStatus(): {isOpen: boolean; message: string} {
     if (currentTimeDecimal < effectiveOpeningTime) {
       return {
         isOpen: false,
-        message: `Le restaurant n'est pas encore ouvert. Les commandes seront disponibles à partir de ${sundayOpening}h00. Horaires d'ouverture: ${hoursText}`
+        message: `Le restaurant n'est pas encore ouvert. Les commandes seront disponibles à partir de ${(sundayOpening - 0.5).toFixed(1)}h. Horaires d'ouverture: ${hoursText}`
       };
     } else if (currentTimeDecimal > effectiveClosingTime) {
       return {
@@ -142,13 +149,13 @@ export function getRestaurantStatus(): {isOpen: boolean; message: string} {
     // Before lunch service
     return {
       isOpen: false,
-      message: `Le restaurant n'est pas encore ouvert. Les commandes seront disponibles à partir de ${lunchOpening-0.5}h. Horaires d'ouverture: ${hoursText}`
+      message: `Le restaurant n'est pas encore ouvert. Les commandes seront disponibles à partir de ${(lunchOpening-0.5).toFixed(1)}h. Horaires d'ouverture: ${hoursText}`
     };
   } else if (currentTimeDecimal > effectiveLunchClosingTime && currentTimeDecimal < effectiveDinnerOpeningTime) {
     // Between lunch and dinner service
     return {
       isOpen: false,
-      message: `Le restaurant est en pause entre le service du midi et du soir. Les commandes reprendront à ${dinnerOpening-0.5}h. Horaires d'ouverture: ${hoursText}`
+      message: `Le restaurant est en pause entre le service du midi et du soir. Les commandes reprendront à ${(dinnerOpening-0.5).toFixed(1)}h. Horaires d'ouverture: ${hoursText}`
     };
   } else if (currentTimeDecimal > effectiveDinnerClosingTime) {
     // After dinner service

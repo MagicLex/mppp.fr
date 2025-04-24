@@ -43,6 +43,7 @@ function isRestaurantOpen() {
   
   // Check if restaurant is closed today
   if (RESTAURANT_CONFIG.openingHours.closedDays.includes(currentDay)) {
+    console.log(`Restaurant is closed today (${currentDay})`);
     return false;
   }
   
@@ -54,6 +55,8 @@ function isRestaurantOpen() {
     // Calculate effective open/close times with the buffer periods
     const effectiveOpeningTime = sundayOpening - (RESTAURANT_CONFIG.preorderMinutes / 60);
     const effectiveClosingTime = sundayClosing - (RESTAURANT_CONFIG.lastOrderMinutes / 60);
+    
+    console.log(`Sunday - Current time: ${currentTimeDecimal.toFixed(2)}, Opening: ${effectiveOpeningTime.toFixed(2)}, Closing: ${effectiveClosingTime.toFixed(2)}`);
     
     return currentTimeDecimal >= effectiveOpeningTime && currentTimeDecimal <= effectiveClosingTime;
   }
@@ -77,6 +80,10 @@ function isRestaurantOpen() {
   const isLunchService = currentTimeDecimal >= effectiveLunchOpeningTime && currentTimeDecimal <= effectiveLunchClosingTime;
   const isDinnerService = currentTimeDecimal >= effectiveDinnerOpeningTime && currentTimeDecimal <= effectiveDinnerClosingTime;
   
+  console.log(`Weekday ${currentDay} - Current time: ${currentTimeDecimal.toFixed(2)}`);
+  console.log(`Lunch: Opening: ${effectiveLunchOpeningTime.toFixed(2)}, Closing: ${effectiveLunchClosingTime.toFixed(2)}, Is lunch open: ${isLunchService}`);
+  console.log(`Dinner: Opening: ${effectiveDinnerOpeningTime.toFixed(2)}, Closing: ${effectiveDinnerClosingTime.toFixed(2)}, Is dinner open: ${isDinnerService}`);
+  
   return isLunchService || isDinnerService;
 }
 
@@ -87,7 +94,10 @@ export default async function handler(req, res) {
 
   try {
     // Check if restaurant is currently accepting orders
-    if (!isRestaurantOpen()) {
+    const restaurantOpen = isRestaurantOpen();
+    console.log(`Restaurant open for orders: ${restaurantOpen}`);
+    
+    if (!restaurantOpen) {
       // Get current day of week
       const currentDay = new Date().getDay();
       let message = '';
