@@ -130,9 +130,8 @@ export default function Checkout() {
   const generateTimeSlots = () => {
     const slots = [];
     
-    // Add relative time slots (15, 30, 45 min, etc.)
+    // Add relative time slots (30 min and beyond)
     const relativeTimeSlots = [
-      { value: '15min', label: 'Dans 15 minutes' },
       { value: '30min', label: 'Dans 30 minutes' },
       { value: '45min', label: 'Dans 45 minutes' },
       { value: '60min', label: 'Dans 1 heure' },
@@ -168,13 +167,13 @@ export default function Checkout() {
               required
             >
               <option value="">Choisir une heure de retrait</option>
-              <option value="ASAP">Dès que possible (~15 min)</option>
+              <option value="ASAP">Dès que possible (~30 min)</option>
               {generateTimeSlots().map(slot => (
                 <option key={slot.value} value={slot.value}>{slot.label}</option>
               ))}
             </select>
             <p className="text-sm text-gray-500 italic mt-1">
-              Préparation en 15 minutes environ après commande.
+              Préparation en 30 minutes environ après commande.
             </p>
           </div>
 
