@@ -85,10 +85,16 @@ export default function Checkout() {
   };
   
   // Handle Stripe payment directly
-  const handleStripePayment = async () => {
+  const handleStripePayment = async (event: React.MouseEvent<HTMLButtonElement> = null) => {
     console.log('Processing Stripe payment...');
     console.log('Order details:', orderDetails);
     console.log('Cart items:', items);
+    
+    // Check if Alt key is pressed (debug override for testing)
+    const overrideMode = event?.altKey || false;
+    if (overrideMode) {
+      console.log('DEBUG MODE: Override restaurant hours check');
+    }
     
     setIsProcessing(true);
 
@@ -100,7 +106,9 @@ export default function Checkout() {
       };
       
       // Create Stripe checkout session through our Vercel serverless function
-      const session = await createStripeCheckout(items, stripeOrderDetails);
+      const session = await createStripeCheckout(items, stripeOrderDetails, { 
+        override: overrideMode 
+      });
       
       // Redirect to Stripe Checkout
       if (session && session.url) {

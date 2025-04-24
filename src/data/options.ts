@@ -30,6 +30,8 @@ export const RESTAURANT_CONFIG = {
 
 export function isRestaurantOpen(): boolean {
   const now = new Date();
+  
+  // Get hours, minutes, and day directly (client browser will use local time)
   const currentHour = now.getHours();
   const currentMinute = now.getMinutes();
   const currentDay = now.getDay(); // 0 = Sunday, 1 = Monday, etc.
@@ -37,9 +39,14 @@ export function isRestaurantOpen(): boolean {
   // Convert current time to decimal hours (e.g., 11:30 -> 11.5)
   const currentTimeDecimal = currentHour + (currentMinute / 60);
   
+  // Debug information to help troubleshoot timezone issues
+  console.log(`Browser time: ${now.toString()}`);
+  console.log(`Local time components - Day: ${currentDay}, Hour: ${currentHour}, Minute: ${currentMinute}`);
+  console.log(`Decimal time: ${currentTimeDecimal.toFixed(2)}`);
+  
   // Check if restaurant is closed today
   if (RESTAURANT_CONFIG.openingHours.closedDays.includes(currentDay)) {
-    console.log(`Restaurant is closed today (${currentDay})`);
+    console.log(`Restaurant is closed today (day ${currentDay})`);
     return false;
   }
   
@@ -54,7 +61,10 @@ export function isRestaurantOpen(): boolean {
     
     console.log(`Sunday - Current time: ${currentTimeDecimal.toFixed(2)}, Opening: ${effectiveOpeningTime.toFixed(2)}, Closing: ${effectiveClosingTime.toFixed(2)}`);
     
-    return currentTimeDecimal >= effectiveOpeningTime && currentTimeDecimal <= effectiveClosingTime;
+    // Debug decision
+    const isOpen = currentTimeDecimal >= effectiveOpeningTime && currentTimeDecimal <= effectiveClosingTime;
+    console.log(`Sunday service open: ${isOpen}`);
+    return isOpen;
   }
   
   // If it's a weekday (Tuesday-Saturday)
@@ -79,6 +89,9 @@ export function isRestaurantOpen(): boolean {
   console.log(`Weekday ${currentDay} - Current time: ${currentTimeDecimal.toFixed(2)}`);
   console.log(`Lunch: Opening: ${effectiveLunchOpeningTime.toFixed(2)}, Closing: ${effectiveLunchClosingTime.toFixed(2)}, Is lunch open: ${isLunchService}`);
   console.log(`Dinner: Opening: ${effectiveDinnerOpeningTime.toFixed(2)}, Closing: ${effectiveDinnerClosingTime.toFixed(2)}, Is dinner open: ${isDinnerService}`);
+  
+  // DEBUG: Uncomment the following line to override for testing
+  // return true;
   
   return isLunchService || isDinnerService;
 }

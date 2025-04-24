@@ -34,16 +34,43 @@ const RESTAURANT_CONFIG = {
 
 function isRestaurantOpen() {
   const now = new Date();
-  const currentHour = now.getHours();
-  const currentMinute = now.getMinutes();
-  const currentDay = now.getDay(); // 0 = Sunday, 1 = Monday, etc.
+  
+  // Adjust for France time zone (UTC+2 in summer)
+  // This ensures consistent behavior regardless of server timezone
+  // Retrieve time in local format (France - CEST/CET)
+  const options = { timeZone: 'Europe/Paris', hour12: false };
+  const franceTimeString = now.toLocaleString('fr-FR', options);
+  const franceTime = new Date(franceTimeString);
+  
+  // Log full date information for debugging
+  console.log(`Server time: ${now.toString()}`);
+  console.log(`France time: ${franceTimeString}`);
+  
+  // French time format is DD/MM/YYYY HH:MM:SS
+  const dateParts = franceTimeString.split(' ')[0].split('/');
+  const timeParts = franceTimeString.split(' ')[1].split(':');
+  
+  // Create a new date object using the date parts (French format)
+  const frenchDate = new Date(
+    parseInt(dateParts[2], 10),     // Year
+    parseInt(dateParts[1], 10) - 1, // Month (0-indexed)
+    parseInt(dateParts[0], 10)      // Day
+  );
+  
+  const currentHour = parseInt(timeParts[0], 10);
+  const currentMinute = parseInt(timeParts[1], 10);
+  const currentDay = frenchDate.getDay(); // 0 = Sunday, 1 = Monday, etc.
   
   // Convert current time to decimal hours (e.g., 11:30 -> 11.5)
   const currentTimeDecimal = currentHour + (currentMinute / 60);
   
+  // Debug time calculation
+  console.log(`Parsed time - Hour: ${currentHour}, Minute: ${currentMinute}, Day: ${currentDay}`);
+  console.log(`Current decimal time: ${currentTimeDecimal.toFixed(2)}`);
+  
   // Check if restaurant is closed today
   if (RESTAURANT_CONFIG.openingHours.closedDays.includes(currentDay)) {
-    console.log(`Restaurant is closed today (${currentDay})`);
+    console.log(`Restaurant is closed today (day ${currentDay})`);
     return false;
   }
   
@@ -58,7 +85,10 @@ function isRestaurantOpen() {
     
     console.log(`Sunday - Current time: ${currentTimeDecimal.toFixed(2)}, Opening: ${effectiveOpeningTime.toFixed(2)}, Closing: ${effectiveClosingTime.toFixed(2)}`);
     
-    return currentTimeDecimal >= effectiveOpeningTime && currentTimeDecimal <= effectiveClosingTime;
+    // Debug decision
+    const isOpen = currentTimeDecimal >= effectiveOpeningTime && currentTimeDecimal <= effectiveClosingTime;
+    console.log(`Sunday service open: ${isOpen}`);
+    return isOpen;
   }
   
   // If it's a weekday (Tuesday-Saturday)
@@ -84,6 +114,9 @@ function isRestaurantOpen() {
   console.log(`Lunch: Opening: ${effectiveLunchOpeningTime.toFixed(2)}, Closing: ${effectiveLunchClosingTime.toFixed(2)}, Is lunch open: ${isLunchService}`);
   console.log(`Dinner: Opening: ${effectiveDinnerOpeningTime.toFixed(2)}, Closing: ${effectiveDinnerClosingTime.toFixed(2)}, Is dinner open: ${isDinnerService}`);
   
+  // DEBUG: TEMPORARY OVERRIDE - always return true
+  // return true;
+  
   return isLunchService || isDinnerService;
 }
 
@@ -93,11 +126,15 @@ export default async function handler(req, res) {
   }
 
   try {
+    // Check for override flag for development/testing
+    const override = req.query.override === 'true' || req.body.override === true;
+    
     // Check if restaurant is currently accepting orders
     const restaurantOpen = isRestaurantOpen();
     console.log(`Restaurant open for orders: ${restaurantOpen}`);
+    console.log(`Override flag: ${override}`);
     
-    if (!restaurantOpen) {
+    if (!restaurantOpen && !override) {
       // Get current day of week
       const currentDay = new Date().getDay();
       let message = '';
@@ -115,6 +152,10 @@ export default async function handler(req, res) {
         error: 'Restaurant is closed',
         message
       });
+    }
+    
+    if (!restaurantOpen && override) {
+      console.log('WARNING: Restaurant is closed but override flag is set. Allowing order to proceed.');
     }
     
     const { items, orderDetails } = req.body;

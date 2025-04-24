@@ -5,7 +5,8 @@ import { CartItem, OrderDetails } from '../types';
  */
 export async function createStripeCheckout(
   items: CartItem[],
-  orderDetails: OrderDetails
+  orderDetails: OrderDetails,
+  options?: { override?: boolean }
 ): Promise<{ id: string; url: string }> {
   try {
     console.log('Creating Stripe checkout for items:', items);
@@ -17,7 +18,11 @@ export async function createStripeCheckout(
       headers: {
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify({ items, orderDetails }),
+      body: JSON.stringify({ 
+        items, 
+        orderDetails,
+        override: options?.override || false, // Pass override flag if provided
+      }),
     });
     
     if (!response.ok) {
