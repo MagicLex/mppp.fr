@@ -18,7 +18,7 @@ export interface AdminSettings {
   businessHours: {
     weekdays: {
       lunch: {
-        opening: number;
+        opening: number; // Stored as decimal, e.g., 12.5 for 12:30
         closing: number;
       };
       dinner: {
@@ -168,6 +168,9 @@ export function isRestaurantOpenWithOverrides(franceDate?: Date): boolean {
   const currentMinute = franceDateObj.getMinutes();
   const currentTimeDecimal = currentHour + (currentMinute / 60);
   
+  // For debugging
+  console.log(`Current time decimal: ${currentTimeDecimal}, Day: ${currentDay}`);
+  
   // Check Sunday hours
   if (currentDay === 0) {
     const openTime = settings.businessHours.sunday.opening;
@@ -177,6 +180,7 @@ export function isRestaurantOpenWithOverrides(franceDate?: Date): boolean {
     const effectiveOpenTime = openTime - (settings.preorderMinutes / 60);
     const effectiveCloseTime = closeTime - (settings.lastOrderMinutes / 60);
     
+    console.log(`Sunday hours: Effective opening ${effectiveOpenTime.toFixed(2)}, closing ${effectiveCloseTime.toFixed(2)}`);
     return currentTimeDecimal >= effectiveOpenTime && currentTimeDecimal <= effectiveCloseTime;
   }
   
@@ -192,6 +196,10 @@ export function isRestaurantOpenWithOverrides(franceDate?: Date): boolean {
   const dinnerClose = settings.businessHours.weekdays.dinner.closing;
   const effectiveDinnerOpen = dinnerOpen - (settings.preorderMinutes / 60);
   const effectiveDinnerClose = dinnerClose - (settings.lastOrderMinutes / 60);
+  
+  console.log(`Weekday hours: 
+    Lunch: ${effectiveLunchOpen.toFixed(2)}-${effectiveLunchClose.toFixed(2)}
+    Dinner: ${effectiveDinnerOpen.toFixed(2)}-${effectiveDinnerClose.toFixed(2)}`);
   
   // Check if we're in lunch or dinner service time window
   const isLunchOpen = currentTimeDecimal >= effectiveLunchOpen && currentTimeDecimal <= effectiveLunchClose;

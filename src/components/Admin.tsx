@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Navigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
-import { AdminSettings, loadAdminSettings, saveAdminSettings, SpecialClosing } from '../data/adminConfig';
+import { AdminSettings, loadAdminSettings, saveAdminSettings, SpecialClosing, isRestaurantOpenWithOverrides } from '../data/adminConfig';
 import { fetchAdminConfig, updateAdminConfig, authenticateAdmin } from '../services/adminService';
 
 // Authentication state interface
@@ -32,6 +32,10 @@ export default function Admin() {
   const [selectedDate, setSelectedDate] = useState<string>('');
   const [specialClosingReason, setSpecialClosingReason] = useState<string>('');
   const [isSaving, setIsSaving] = useState(false);
+  const [isOpen, setIsOpen] = useState<boolean>(false);
+  
+  // State to refresh the "open" status periodically
+  const [refreshTrigger, setRefreshTrigger] = useState<number>(0);
   
   // Get today's date for min date in datepicker
   const today = new Date();
@@ -55,6 +59,8 @@ export default function Admin() {
       try {
         const config = await fetchAdminConfig();
         setSettings(config);
+        // Check if restaurant is open
+        setIsOpen(isRestaurantOpenWithOverrides());
       } catch (error) {
         console.error('Failed to load admin configuration:', error);
         toast.error('Erreur lors du chargement de la configuration');
@@ -65,6 +71,20 @@ export default function Admin() {
     
     loadConfig();
   }, []);
+  
+  // Refresh open status every minute
+  useEffect(() => {
+    // Check open status immediately
+    setIsOpen(isRestaurantOpenWithOverrides());
+    
+    // Set timer to refresh every minute
+    const timer = setInterval(() => {
+      setIsOpen(isRestaurantOpenWithOverrides());
+      setRefreshTrigger(prev => prev + 1);
+    }, 60000);
+    
+    return () => clearInterval(timer);
+  }, [settings, refreshTrigger]);
   
   // Login handler
   const handleLogin = async (e: React.FormEvent) => {
@@ -268,6 +288,44 @@ export default function Admin() {
     return days[day];
   };
   
+  // Format decimal time (e.g. 12.5) to HH:MM for input
+  const formatTimeForInput = (decimalTime: number): string => {
+    const hours = Math.floor(decimalTime);
+    const minutes = Math.round((decimalTime - hours) * 60);
+    return `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}`;
+  };
+  
+  // Update time from HH:MM input
+  const handleUpdateTimeInput = (
+    period: 'weekdays' | 'sunday',
+    mealTime: 'lunch' | 'dinner' | null,
+    field: 'opening' | 'closing',
+    value: string
+  ) => {
+    if (!value) return;
+    
+    // Parse HH:MM to decimal time
+    const [hours, minutes] = value.split(':').map(Number);
+    if (isNaN(hours) || isNaN(minutes)) return;
+    
+    // Calculate decimal time (e.g., 12:30 -> 12.5)
+    const decimalTime = hours + (minutes / 60);
+    
+    // Update settings
+    setSettings(prev => {
+      const updated = { ...prev };
+      
+      if (period === 'weekdays' && mealTime) {
+        updated.businessHours.weekdays[mealTime][field] = decimalTime;
+      } else if (period === 'sunday') {
+        updated.businessHours.sunday[field] = decimalTime;
+      }
+      
+      saveAdminSettings(updated);
+      return updated;
+    });
+  };
+  
   // If not authenticated, show login form
   if (!auth.isAuthenticated) {
     return (
@@ -379,12 +437,19 @@ export default function Admin() {
             <p className="text-sm text-gray-600">
               {settings.forceClose ? 
                 'Le restaurant est temporairement fermé' : 
-                'Le restaurant suit les horaires définis ci-dessous'}
+                isOpen ? 
+                  'Le restaurant est ouvert aux horaires définis' : 
+                  'Le restaurant est fermé (hors horaires d\'ouverture)'
+              }
             </p>
           </div>
           <div>
-            <span className={`px-3 py-1 rounded-full text-white ${settings.forceClose ? 'bg-red-600' : 'bg-green-600'}`}>
-              {settings.forceClose ? 'Fermé' : 'Ouvert'}
+            <span className={`px-3 py-1 rounded-full text-white ${
+              settings.forceClose ? 'bg-red-600' : 
+              isOpen ? 'bg-green-600' : 'bg-orange-500'
+            }`}>
+              {settings.forceClose ? 'Fermé (forcé)' : 
+               isOpen ? 'Ouvert' : 'Fermé'}
             </span>
           </div>
         </div>
@@ -475,62 +540,62 @@ export default function Admin() {
           <div className="grid grid-cols-2 gap-4 mb-4">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
-                Déjeuner - Ouverture (ex: 12)
+                Déjeuner - Ouverture
               </label>
-              <input
-                type="number"
-                min="0"
-                max="23"
-                step="1"
-                value={settings.businessHours.weekdays.lunch.opening}
-                onChange={(e) => handleUpdateHours('weekdays', 'lunch', 'opening', e.target.value)}
-                className="w-full px-3 py-2 border-2 border-gray-300 rounded-md"
-              />
+              <div className="flex items-center">
+                <input
+                  type="time"
+                  value={formatTimeForInput(settings.businessHours.weekdays.lunch.opening)}
+                  onChange={(e) => handleUpdateTimeInput('weekdays', 'lunch', 'opening', e.target.value)}
+                  className="w-full px-3 py-2 border-2 border-gray-300 rounded-md"
+                />
+              </div>
+              <p className="text-xs text-gray-500 mt-1">Format: 24h (ex: 12:00)</p>
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
-                Déjeuner - Fermeture (ex: 14)
+                Déjeuner - Fermeture
               </label>
-              <input
-                type="number"
-                min="0"
-                max="23"
-                step="1"
-                value={settings.businessHours.weekdays.lunch.closing}
-                onChange={(e) => handleUpdateHours('weekdays', 'lunch', 'closing', e.target.value)}
-                className="w-full px-3 py-2 border-2 border-gray-300 rounded-md"
-              />
+              <div className="flex items-center">
+                <input
+                  type="time"
+                  value={formatTimeForInput(settings.businessHours.weekdays.lunch.closing)}
+                  onChange={(e) => handleUpdateTimeInput('weekdays', 'lunch', 'closing', e.target.value)}
+                  className="w-full px-3 py-2 border-2 border-gray-300 rounded-md"
+                />
+              </div>
+              <p className="text-xs text-gray-500 mt-1">Format: 24h (ex: 14:00)</p>
             </div>
           </div>
           
           <div className="grid grid-cols-2 gap-4">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
-                Dîner - Ouverture (ex: 19)
+                Dîner - Ouverture
               </label>
-              <input
-                type="number"
-                min="0"
-                max="23"
-                step="1"
-                value={settings.businessHours.weekdays.dinner.opening}
-                onChange={(e) => handleUpdateHours('weekdays', 'dinner', 'opening', e.target.value)}
-                className="w-full px-3 py-2 border-2 border-gray-300 rounded-md"
-              />
+              <div className="flex items-center">
+                <input
+                  type="time"
+                  value={formatTimeForInput(settings.businessHours.weekdays.dinner.opening)}
+                  onChange={(e) => handleUpdateTimeInput('weekdays', 'dinner', 'opening', e.target.value)}
+                  className="w-full px-3 py-2 border-2 border-gray-300 rounded-md"
+                />
+              </div>
+              <p className="text-xs text-gray-500 mt-1">Format: 24h (ex: 19:00)</p>
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
-                Dîner - Fermeture (ex: 21)
+                Dîner - Fermeture
               </label>
-              <input
-                type="number"
-                min="0"
-                max="23"
-                step="1"
-                value={settings.businessHours.weekdays.dinner.closing}
-                onChange={(e) => handleUpdateHours('weekdays', 'dinner', 'closing', e.target.value)}
-                className="w-full px-3 py-2 border-2 border-gray-300 rounded-md"
-              />
+              <div className="flex items-center">
+                <input
+                  type="time"
+                  value={formatTimeForInput(settings.businessHours.weekdays.dinner.closing)}
+                  onChange={(e) => handleUpdateTimeInput('weekdays', 'dinner', 'closing', e.target.value)}
+                  className="w-full px-3 py-2 border-2 border-gray-300 rounded-md"
+                />
+              </div>
+              <p className="text-xs text-gray-500 mt-1">Format: 24h (ex: 21:00)</p>
             </div>
           </div>
         </div>
@@ -542,31 +607,31 @@ export default function Admin() {
           <div className="grid grid-cols-2 gap-4">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
-                Ouverture (ex: 12)
+                Ouverture
               </label>
-              <input
-                type="number"
-                min="0"
-                max="23"
-                step="1"
-                value={settings.businessHours.sunday.opening}
-                onChange={(e) => handleUpdateHours('sunday', null, 'opening', e.target.value)}
-                className="w-full px-3 py-2 border-2 border-gray-300 rounded-md"
-              />
+              <div className="flex items-center">
+                <input
+                  type="time"
+                  value={formatTimeForInput(settings.businessHours.sunday.opening)}
+                  onChange={(e) => handleUpdateTimeInput('sunday', null, 'opening', e.target.value)}
+                  className="w-full px-3 py-2 border-2 border-gray-300 rounded-md"
+                />
+              </div>
+              <p className="text-xs text-gray-500 mt-1">Format: 24h (ex: 12:00)</p>
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
-                Fermeture (ex: 21)
+                Fermeture
               </label>
-              <input
-                type="number"
-                min="0"
-                max="23"
-                step="1"
-                value={settings.businessHours.sunday.closing}
-                onChange={(e) => handleUpdateHours('sunday', null, 'closing', e.target.value)}
-                className="w-full px-3 py-2 border-2 border-gray-300 rounded-md"
-              />
+              <div className="flex items-center">
+                <input
+                  type="time"
+                  value={formatTimeForInput(settings.businessHours.sunday.closing)}
+                  onChange={(e) => handleUpdateTimeInput('sunday', null, 'closing', e.target.value)}
+                  className="w-full px-3 py-2 border-2 border-gray-300 rounded-md"
+                />
+              </div>
+              <p className="text-xs text-gray-500 mt-1">Format: 24h (ex: 21:00)</p>
             </div>
           </div>
         </div>
