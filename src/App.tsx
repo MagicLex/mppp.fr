@@ -47,6 +47,51 @@ function HeaderWithRoute() {
   return <Header />;
 }
 
+function Footer() {
+  // State to store current time
+  const [currentTime, setCurrentTime] = useState<string>('');
+  
+  useEffect(() => {
+    // Function to update the current time in French format
+    const updateTime = () => {
+      const now = new Date();
+      // Format time in France timezone as HH:MM
+      const options: Intl.DateTimeFormatOptions = { 
+        timeZone: 'Europe/Paris',
+        hour: '2-digit', 
+        minute: '2-digit' 
+      };
+      setCurrentTime(now.toLocaleTimeString('fr-FR', options));
+    };
+    
+    // Update time immediately
+    updateTime();
+    
+    // Set interval to update time every minute
+    const intervalId = setInterval(updateTime, 60000);
+    
+    // Clear interval on component unmount
+    return () => clearInterval(intervalId);
+  }, []);
+  
+  return (
+    <footer className="bg-amber-200 py-3 text-center text-sm border-t border-amber-400 mt-auto">
+      <div className="container mx-auto px-4">
+        <nav className="flex justify-center space-x-4 mb-1">
+          <Link to="/mentions-legales" className="text-amber-900 hover:underline">Mentions Légales</Link>
+          <span className="text-amber-900">|</span>
+          <Link to="/conditions-generales" className="text-amber-900 hover:underline">Conditions Générales</Link>
+        </nav>
+        {currentTime && (
+          <div className="text-amber-900 mt-1">
+            <span>Heure locale: {currentTime}</span>
+          </div>
+        )}
+      </div>
+    </footer>
+  );
+}
+
 function App() {
   return (
     <HashRouter>
@@ -87,16 +132,8 @@ function App() {
               },
             }} 
           />
-          {/* Footer */}
-          <footer className="bg-amber-200 py-3 text-center text-sm border-t border-amber-400 mt-auto">
-            <div className="container mx-auto px-4">
-              <nav className="flex justify-center space-x-4">
-                <Link to="/mentions-legales" className="text-amber-900 hover:underline">Mentions Légales</Link>
-                <span className="text-amber-900">|</span>
-                <Link to="/conditions-generales" className="text-amber-900 hover:underline">Conditions Générales</Link>
-              </nav>
-            </div>
-          </footer>
+          {/* Footer with local time */}
+          <Footer />
         </div>
       </CartProvider>
     </HashRouter>
