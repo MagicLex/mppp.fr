@@ -6,7 +6,7 @@ import { trackBeginCheckout } from '../services/analytics';
 import { createStripeCheckout } from '../services/stripeService';
 import { createOrUpdateContact } from '../services/hubspot';
 import { isRestaurantOpen, getRestaurantStatus } from '../data/options';
-import { isRestaurantOpenWithOverrides, getRestaurantStatusWithOverrides } from '../data/adminConfig';
+import { isRestaurantOpenWithOverrides, getRestaurantStatusWithOverrides, loadAdminSettings } from '../data/adminConfig';
 
 export default function Checkout() {
   const navigate = useNavigate();
@@ -163,24 +163,32 @@ export default function Checkout() {
       { value: '120min', label: 'Dans 2 heures', minutes: 120 },
     ];
     
+    // Get admin settings for accurate closing times
+    const adminSettings = loadAdminSettings();
+    const config = adminSettings.businessHours;
+    
     // Determine restaurant closing time for today
     let closingHour = 0;
     let closingMinute = 0;
     
     // Is it Sunday?
     if (currentDay === 0) {
-      closingHour = 21; // 21:00
-      closingMinute = 0;
-    } else if (currentDay !== 1) { // Not Monday (closed)
+      // Use Sunday closing time from admin settings
+      const sundayClosing = config.sunday.closing;
+      closingHour = Math.floor(sundayClosing);
+      closingMinute = Math.round((sundayClosing - closingHour) * 60);
+    } else if (currentDay !== 1 && !config.closedDays.includes(currentDay)) {
       // For other days, determine if we're in lunch or dinner service
-      if (currentHour < 14) {
+      if (currentHour < config.weekdays.lunch.closing) {
         // Lunch service
-        closingHour = 14; // 14:00
-        closingMinute = 0;
+        const lunchClosing = config.weekdays.lunch.closing;
+        closingHour = Math.floor(lunchClosing);
+        closingMinute = Math.round((lunchClosing - closingHour) * 60);
       } else {
         // Dinner service
-        closingHour = 21; // 21:00
-        closingMinute = 0;
+        const dinnerClosing = config.weekdays.dinner.closing;
+        closingHour = Math.floor(dinnerClosing);
+        closingMinute = Math.round((dinnerClosing - closingHour) * 60);
       }
     }
     

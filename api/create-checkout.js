@@ -5,8 +5,8 @@ import { isRestaurantForceClosed, isSpecialClosingDate } from './utils/adminSett
 // Initialize Stripe with the API key from environment variables
 const stripe = Stripe(process.env.STRIPE_SECRET_KEY);
 
-// Restaurant configuration - must match what's in src/data/options.ts
-const RESTAURANT_CONFIG = {
+// Default restaurant configuration - will be overridden by admin settings from file
+const DEFAULT_RESTAURANT_CONFIG = {
   openingHours: {
     // 24-hour format for week days (Tuesday-Saturday)
     weekdays: {
@@ -32,6 +32,8 @@ const RESTAURANT_CONFIG = {
   // Stop orders 30 minutes before closing
   lastOrderMinutes: 30
 };
+
+// We'll get the actual config from utils/adminSettings.js inside isRestaurantOpen
 
 async function isRestaurantOpen() {
   // First check admin overrides
@@ -63,7 +65,7 @@ async function isRestaurantOpen() {
   
   // Get admin settings - this may have modified business hours
   const adminSettings = await getAdminSettings();
-  const config = adminSettings || RESTAURANT_CONFIG;
+  const config = adminSettings || DEFAULT_RESTAURANT_CONFIG;
   
   // Is it a closed day? (Using admin settings which may have been modified)
   if (config.businessHours.closedDays.includes(franceDay)) {
@@ -121,9 +123,22 @@ export default async function handler(req, res) {
     const restaurantOpen = await isRestaurantOpen();
     
     if (!restaurantOpen && !override) {
+      // Get admin settings for accurate hours in message
+      const { getAdminSettings } = await import('./utils/adminSettings');
+      const adminSettings = await getAdminSettings();
+      const config = adminSettings || DEFAULT_RESTAURANT_CONFIG;
+      
+      // Format hours for display in a user-friendly way
+      const lunchHours = `${Math.floor(config.businessHours.weekdays.lunch.opening)}h-${Math.floor(config.businessHours.weekdays.lunch.closing)}h`;
+      const dinnerHours = `${Math.floor(config.businessHours.weekdays.dinner.opening)}h-${Math.floor(config.businessHours.weekdays.dinner.closing)}h`;
+      const sundayHours = `${Math.floor(config.businessHours.sunday.opening)}h-${Math.floor(config.businessHours.sunday.closing)}h`;
+      
+      // Dynamic hours message
+      const hoursMessage = `Mardi-Samedi: ${lunchHours} / ${dinnerHours} | Dimanche: ${sundayHours} | Fermé le lundi`;
+      
       return res.status(400).json({ 
         error: 'Restaurant is closed',
-        message: "Le restaurant n'accepte pas de commandes pour le moment. Horaires: Mardi-Samedi: 12h-14h / 19h-21h (commandes 30min avant la fermeture)"
+        message: `Le restaurant n'accepte pas de commandes pour le moment. Horaires: ${hoursMessage} (commandes ${config.lastOrderMinutes}min avant la fermeture)`
       });
     }
     
@@ -147,24 +162,33 @@ export default async function handler(req, res) {
         requestedMinutes = 30; // Assume 30 minutes for ASAP
       }
       
+      // Get current settings for accurate closing times
+      const { getAdminSettings } = await import('./utils/adminSettings');
+      const adminSettings = await getAdminSettings();
+      const config = adminSettings || DEFAULT_RESTAURANT_CONFIG;
+      
       // Determine restaurant closing time for today
       let closingHour = 0;
       let closingMinute = 0;
       
       // Is it Sunday?
       if (franceDay === 0) {
-        closingHour = 21; // 21:00
-        closingMinute = 0;
-      } else if (franceDay !== 1) { // Not Monday (closed)
+        // Use admin settings for Sunday hours
+        const sundayClosing = config.businessHours.sunday.closing;
+        closingHour = Math.floor(sundayClosing);
+        closingMinute = Math.round((sundayClosing - closingHour) * 60);
+      } else if (franceDay !== 1 && !config.businessHours.closedDays.includes(franceDay)) {
         // For other days, determine if we're in lunch or dinner service
-        if (franceHour < 14) {
+        if (franceHour < config.businessHours.weekdays.lunch.closing) {
           // Lunch service
-          closingHour = 14; // 14:00
-          closingMinute = 0;
+          const lunchClosing = config.businessHours.weekdays.lunch.closing;
+          closingHour = Math.floor(lunchClosing);
+          closingMinute = Math.round((lunchClosing - closingHour) * 60);
         } else {
           // Dinner service
-          closingHour = 21; // 21:00
-          closingMinute = 0;
+          const dinnerClosing = config.businessHours.weekdays.dinner.closing;
+          closingHour = Math.floor(dinnerClosing);
+          closingMinute = Math.round((dinnerClosing - closingHour) * 60);
         }
       }
       

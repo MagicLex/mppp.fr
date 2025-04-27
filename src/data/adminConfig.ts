@@ -219,11 +219,18 @@ export function getRestaurantStatusWithOverrides(): {isOpen: boolean; message: s
   const currentDay = franceDate.getDay(); // 0 = Sunday, 1 = Monday, etc.
   const dateString = franceDate.toISOString().split('T')[0]; // Get YYYY-MM-DD
   
+  // Format time with minutes if needed
+  const formatTimeDisplay = (time: number): string => {
+    const hours = Math.floor(time);
+    const minutes = Math.round((time - hours) * 60);
+    return minutes > 0 ? `${hours}h${minutes}` : `${hours}h`;
+  };
+  
   // Get standard hours text for display in messages
   const hoursText = "Mardi-Samedi: " + 
-    `${settings.businessHours.weekdays.lunch.opening}h-${settings.businessHours.weekdays.lunch.closing}h / ` +
-    `${settings.businessHours.weekdays.dinner.opening}h-${settings.businessHours.weekdays.dinner.closing}h | ` +
-    `Dimanche: ${settings.businessHours.sunday.opening}h-${settings.businessHours.sunday.closing}h | ` +
+    `${formatTimeDisplay(settings.businessHours.weekdays.lunch.opening)}-${formatTimeDisplay(settings.businessHours.weekdays.lunch.closing)} / ` +
+    `${formatTimeDisplay(settings.businessHours.weekdays.dinner.opening)}-${formatTimeDisplay(settings.businessHours.weekdays.dinner.closing)} | ` +
+    `Dimanche: ${formatTimeDisplay(settings.businessHours.sunday.opening)}-${formatTimeDisplay(settings.businessHours.sunday.closing)} | ` +
     "Fermé le lundi";
   
   // Force close overrides everything
