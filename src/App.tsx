@@ -6,6 +6,7 @@ import CompactHeader from './components/CompactHeader';
 import Menu from './components/Menu';
 import Cart from './components/Cart';
 import Checkout from './components/Checkout';
+import Admin from './components/Admin';
 import { CartProvider, useCart } from './context/CartContext';
 import { trackPageView, trackPurchase } from './services/analytics';
 import { createDealForContact } from './services/hubspot';
@@ -41,6 +42,8 @@ function HeaderWithRoute() {
     return <CompactHeader title="Commander" showBackButton={true} />;
   } else if (path.includes('/payment')) {
     return <CompactHeader title="Paiement" showBackButton={false} />;
+  } else if (path === '/admin1988') {
+    return <CompactHeader title="Administration" showBackButton={false} />;
   }
   
   // Use full header for all other pages
@@ -107,6 +110,7 @@ function App() {
               <Route path="/conditions-generales" element={<TermsAndConditions />} />
               <Route path="/payment-success" element={<PaymentSuccess />} />
               <Route path="/payment-cancel" element={<PaymentCancel />} />
+              <Route path="/admin1988" element={<Admin />} />
             </Routes>
           </main>
           <Toaster 

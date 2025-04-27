@@ -1,5 +1,6 @@
 // Serverless function for creating Stripe checkout sessions
 import Stripe from 'stripe';
+import { isRestaurantForceClosed, isSpecialClosingDate } from './utils/adminSettings';
 
 // Initialize Stripe with the API key from environment variables
 const stripe = Stripe(process.env.STRIPE_SECRET_KEY);
@@ -32,7 +33,10 @@ const RESTAURANT_CONFIG = {
   lastOrderMinutes: 30
 };
 
-function isRestaurantOpen() {
+async function isRestaurantOpen() {
+  // First check admin overrides
+  const { isRestaurantForceClosed, isSpecialClosingDate, getAdminSettings } = await import('./utils/adminSettings');
+  
   const now = new Date();
   
   // Get current hour and day in France timezone
@@ -45,22 +49,39 @@ function isRestaurantOpen() {
   // Simple debug output
   console.log(`France time: ${franceHour}:${franceMinute}, Day: ${franceDay}`);
   
-  // Is it Monday? We're closed
-  if (franceDay === 1) {
+  // Check if force closed from admin panel
+  if (await isRestaurantForceClosed()) {
+    console.log('Restaurant is force closed by admin');
+    return false;
+  }
+  
+  // Check if today is a special closing day
+  if (await isSpecialClosingDate(franceDate)) {
+    console.log('Restaurant is closed for a special date');
+    return false;
+  }
+  
+  // Get admin settings - this may have modified business hours
+  const adminSettings = await getAdminSettings();
+  const config = adminSettings || RESTAURANT_CONFIG;
+  
+  // Is it a closed day? (Using admin settings which may have been modified)
+  if (config.businessHours.closedDays.includes(franceDay)) {
+    console.log(`Restaurant is closed on day ${franceDay}`);
     return false;
   }
   
   // Is it Sunday?
   if (franceDay === 0) {
-    const openTime = RESTAURANT_CONFIG.openingHours.sunday.opening;
-    const closeTime = RESTAURANT_CONFIG.openingHours.sunday.closing;
+    const openTime = config.businessHours.sunday.opening;
+    const closeTime = config.businessHours.sunday.closing;
     
     // Convert to decimal time for simpler comparison (e.g., 11:30 = 11.5)
     const currentDecimal = franceHour + (franceMinute / 60);
     
     // Can order 30 min before opening until 30 min before closing
-    const effectiveOpenTime = openTime - (RESTAURANT_CONFIG.preorderMinutes / 60);
-    const effectiveCloseTime = closeTime - (RESTAURANT_CONFIG.lastOrderMinutes / 60);
+    const effectiveOpenTime = openTime - (config.preorderMinutes / 60);
+    const effectiveCloseTime = closeTime - (config.lastOrderMinutes / 60);
     
     return currentDecimal >= effectiveOpenTime && currentDecimal <= effectiveCloseTime;
   }
@@ -69,16 +90,16 @@ function isRestaurantOpen() {
   const currentDecimal = franceHour + (franceMinute / 60);
   
   // Lunch service
-  const lunchOpen = RESTAURANT_CONFIG.openingHours.weekdays.lunch.opening;
-  const lunchClose = RESTAURANT_CONFIG.openingHours.weekdays.lunch.closing;
-  const effectiveLunchOpen = lunchOpen - (RESTAURANT_CONFIG.preorderMinutes / 60);
-  const effectiveLunchClose = lunchClose - (RESTAURANT_CONFIG.lastOrderMinutes / 60);
+  const lunchOpen = config.businessHours.weekdays.lunch.opening;
+  const lunchClose = config.businessHours.weekdays.lunch.closing;
+  const effectiveLunchOpen = lunchOpen - (config.preorderMinutes / 60);
+  const effectiveLunchClose = lunchClose - (config.lastOrderMinutes / 60);
   
   // Dinner service  
-  const dinnerOpen = RESTAURANT_CONFIG.openingHours.weekdays.dinner.opening;
-  const dinnerClose = RESTAURANT_CONFIG.openingHours.weekdays.dinner.closing;
-  const effectiveDinnerOpen = dinnerOpen - (RESTAURANT_CONFIG.preorderMinutes / 60);
-  const effectiveDinnerClose = dinnerClose - (RESTAURANT_CONFIG.lastOrderMinutes / 60);
+  const dinnerOpen = config.businessHours.weekdays.dinner.opening;
+  const dinnerClose = config.businessHours.weekdays.dinner.closing;
+  const effectiveDinnerOpen = dinnerOpen - (config.preorderMinutes / 60);
+  const effectiveDinnerClose = dinnerClose - (config.lastOrderMinutes / 60);
   
   // Check if we're in lunch or dinner service time window
   const isLunchOpen = currentDecimal >= effectiveLunchOpen && currentDecimal <= effectiveLunchClose;
@@ -97,7 +118,7 @@ export default async function handler(req, res) {
     const override = req.query.override === 'true' || req.body.override === true;
     
     // Check if restaurant is currently accepting orders
-    const restaurantOpen = isRestaurantOpen();
+    const restaurantOpen = await isRestaurantOpen();
     
     if (!restaurantOpen && !override) {
       return res.status(400).json({ 

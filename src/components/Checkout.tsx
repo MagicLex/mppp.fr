@@ -6,6 +6,7 @@ import { trackBeginCheckout } from '../services/analytics';
 import { createStripeCheckout } from '../services/stripeService';
 import { createOrUpdateContact } from '../services/hubspot';
 import { isRestaurantOpen, getRestaurantStatus } from '../data/options';
+import { isRestaurantOpenWithOverrides, getRestaurantStatusWithOverrides } from '../data/adminConfig';
 
 export default function Checkout() {
   const navigate = useNavigate();
@@ -20,12 +21,12 @@ export default function Checkout() {
   
   // Check if restaurant is open periodically
   useEffect(() => {
-    // Check restaurant status immediately
-    setRestaurantStatus(getRestaurantStatus());
+    // Check restaurant status immediately with admin overrides
+    setRestaurantStatus(getRestaurantStatusWithOverrides());
     
     // Set up an interval to check every minute
     const interval = setInterval(() => {
-      setRestaurantStatus(getRestaurantStatus());
+      setRestaurantStatus(getRestaurantStatusWithOverrides());
     }, 60000); // 60 seconds
     
     return () => clearInterval(interval); // Clean up on unmount
