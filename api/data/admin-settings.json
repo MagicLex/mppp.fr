@@ -1,0 +1,25 @@
+{
+  "forceClose": false,
+  "specialClosings": [],
+  "businessHours": {
+    "weekdays": {
+      "lunch": {
+        "opening": 12,
+        "closing": 14
+      },
+      "dinner": {
+        "opening": 19,
+        "closing": 21
+      }
+    },
+    "sunday": {
+      "opening": 12,
+      "closing": 21
+    },
+    "closedDays": [1]
+  },
+  "preorderMinutes": 30,
+  "lastOrderMinutes": 30,
+  "lastUpdated": "2025-04-27T22:52:00.000Z",
+  "updatedBy": "system"
+}
