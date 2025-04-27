@@ -1,5 +1,10 @@
 import { OrderOption } from '../types';
-import { loadAdminSettings, defaultAdminSettings } from './adminConfig';
+import { 
+  loadAdminSettings, 
+  defaultAdminSettings, 
+  isRestaurantOpenWithOverrides, 
+  getRestaurantStatusWithOverrides 
+} from './adminConfig';
 import { DEFAULT_RESTAURANT_CONFIG } from './constants';
 
 // Get current restaurant configuration (from admin settings or defaults)
@@ -28,13 +33,11 @@ export const RESTAURANT_CONFIG = getRestaurantConfig();
 
 export function isRestaurantOpen(): boolean {
   // Forward to the adminConfig implementation
-  const { isRestaurantOpenWithOverrides } = require('./adminConfig');
   return isRestaurantOpenWithOverrides();
 }
 
 export function getRestaurantStatus(): {isOpen: boolean; message: string} {
   // Forward to the adminConfig implementation
-  const { getRestaurantStatusWithOverrides } = require('./adminConfig');
   const status = getRestaurantStatusWithOverrides();
   
   // Just take the isOpen and message properties (maintain existing API)
