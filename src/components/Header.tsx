@@ -3,6 +3,7 @@ import { Link, useLocation } from 'react-router-dom';
 import { ShoppingCart, Clock, MapPin, AlertCircle } from 'lucide-react';
 import { useCart } from '../context/CartContext';
 import { isRestaurantOpen, getRestaurantStatus } from '../data/options';
+import { getFormattedBusinessHours } from '../data/adminConfig';
 
 export default function Header() {
   const { items } = useCart();
@@ -62,7 +63,7 @@ export default function Header() {
                 <div className="flex flex-col gap-y-1 mt-1 text-sm">
                   <div className="flex items-start">
                     <Clock size={18} className="text-black mr-1 flex-shrink-0 mt-1" />
-                    <p className="text-black"><span className="font-bold mr-1">Horaires:</span> Mardi-Samedi: 12h-14h / 19h-21h | Dimanche: 12h-21h</p>
+                    <p className="text-black"><span className="font-bold mr-1">Horaires:</span> {getFormattedBusinessHours()}</p>
                   </div>
                   
                   <div className="flex items-start">
@@ -130,7 +131,7 @@ export default function Header() {
                 <div className="flex flex-col gap-y-1 mt-1 text-sm">
                   <div className="flex items-start">
                     <Clock size={18} className="text-black mr-1 flex-shrink-0 mt-1" />
-                    <p className="text-black"><span className="font-bold mr-1">Horaires:</span> Mardi-Samedi: 12h-14h / 19h-21h | Dimanche: 12h-21h</p>
+                    <p className="text-black"><span className="font-bold mr-1">Horaires:</span> {getFormattedBusinessHours()}</p>
                   </div>
                   
                   <div className="flex items-start">

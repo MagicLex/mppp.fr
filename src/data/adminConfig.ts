@@ -232,6 +232,16 @@ export function getRestaurantStatusWithOverrides(): {isOpen: boolean; message: s
     `${formatTimeDisplay(settings.businessHours.weekdays.dinner.opening)}-${formatTimeDisplay(settings.businessHours.weekdays.dinner.closing)} | ` +
     `Dimanche: ${formatTimeDisplay(settings.businessHours.sunday.opening)}-${formatTimeDisplay(settings.businessHours.sunday.closing)} | ` +
     "Fermé le lundi";
+    
+  // Export this function separately so it can be used by other components
+  export function getFormattedBusinessHours(): string {
+    const settings = loadAdminSettings();
+    return "Mardi-Samedi: " + 
+      `${formatTimeDisplay(settings.businessHours.weekdays.lunch.opening)}-${formatTimeDisplay(settings.businessHours.weekdays.lunch.closing)} / ` +
+      `${formatTimeDisplay(settings.businessHours.weekdays.dinner.opening)}-${formatTimeDisplay(settings.businessHours.weekdays.dinner.closing)} | ` +
+      `Dimanche: ${formatTimeDisplay(settings.businessHours.sunday.opening)}-${formatTimeDisplay(settings.businessHours.sunday.closing)} | ` +
+      "Fermé le lundi";
+  };
   
   // Force close overrides everything
   if (settings.forceClose) {

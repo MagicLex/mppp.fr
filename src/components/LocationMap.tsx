@@ -3,6 +3,7 @@ import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import { MapPin, Clock } from 'lucide-react';
+import { getFormattedBusinessHours } from '../data/adminConfig';
 
 // Fix Leaflet's default icon path issues
 delete (L.Icon.Default.prototype as any)._getIconUrl;
@@ -79,8 +80,7 @@ export default function LocationMap() {
             <Clock size={16} className="text-amber-600 flex-shrink-0 mt-1" />
             <div className="text-black">
               <p><strong>Horaires :</strong></p>
-              <p>Mardi au Samedi : 12h-14h / 19h-21h</p>
-              <p>Dimanche : 12h-21h</p>
+              <p>{getFormattedBusinessHours()}</p>
               <p className="mt-1">🅿️ Parking à proximité</p>
             </div>
           </div>
