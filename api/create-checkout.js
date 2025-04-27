@@ -6,6 +6,7 @@ import { isRestaurantForceClosed, isSpecialClosingDate } from './utils/adminSett
 const stripe = Stripe(process.env.STRIPE_SECRET_KEY);
 
 // Default restaurant configuration - will be overridden by admin settings from file
+// Must match src/data/constants.ts
 const DEFAULT_RESTAURANT_CONFIG = {
   openingHours: {
     // 24-hour format for week days (Tuesday-Saturday)

@@ -1,5 +1,5 @@
 // Admin configuration and state management for restaurant settings
-import { RESTAURANT_CONFIG } from './options';
+import { DEFAULT_RESTAURANT_CONFIG } from './constants';
 
 // Types
 export interface SpecialClosing {
@@ -55,22 +55,22 @@ export const defaultAdminSettings: AdminSettings = {
   businessHours: {
     weekdays: {
       lunch: {
-        opening: RESTAURANT_CONFIG.openingHours.weekdays.lunch.opening,
-        closing: RESTAURANT_CONFIG.openingHours.weekdays.lunch.closing,
+        opening: DEFAULT_RESTAURANT_CONFIG.openingHours.weekdays.lunch.opening,
+        closing: DEFAULT_RESTAURANT_CONFIG.openingHours.weekdays.lunch.closing,
       },
       dinner: {
-        opening: RESTAURANT_CONFIG.openingHours.weekdays.dinner.opening,
-        closing: RESTAURANT_CONFIG.openingHours.weekdays.dinner.closing,
+        opening: DEFAULT_RESTAURANT_CONFIG.openingHours.weekdays.dinner.opening,
+        closing: DEFAULT_RESTAURANT_CONFIG.openingHours.weekdays.dinner.closing,
       }
     },
     sunday: {
-      opening: RESTAURANT_CONFIG.openingHours.sunday.opening,
-      closing: RESTAURANT_CONFIG.openingHours.sunday.closing,
+      opening: DEFAULT_RESTAURANT_CONFIG.openingHours.sunday.opening,
+      closing: DEFAULT_RESTAURANT_CONFIG.openingHours.sunday.closing,
     },
-    closedDays: [...RESTAURANT_CONFIG.openingHours.closedDays]
+    closedDays: [...DEFAULT_RESTAURANT_CONFIG.openingHours.closedDays]
   },
-  preorderMinutes: RESTAURANT_CONFIG.preorderMinutes,
-  lastOrderMinutes: RESTAURANT_CONFIG.lastOrderMinutes,
+  preorderMinutes: DEFAULT_RESTAURANT_CONFIG.preorderMinutes,
+  lastOrderMinutes: DEFAULT_RESTAURANT_CONFIG.lastOrderMinutes,
   lastUpdated: new Date().toISOString(),
   updatedBy: 'system'
 };

@@ -6,24 +6,24 @@ let cachedSettings = null;
 let cachedSettingsExpiry = 0;
 const CACHE_TTL = 60 * 1000; // 1 minute cache
 
-// Default configuration
+// Default configuration - should match src/data/constants.ts
 const DEFAULT_CONFIG = {
   forceClose: false,
   specialClosings: [],
   businessHours: {
     weekdays: {
       lunch: {
-        opening: 12,
-        closing: 14,
+        opening: 12, // 12:00
+        closing: 14, // 14:00
       },
       dinner: {
-        opening: 19,
-        closing: 21,
+        opening: 19, // 19:00
+        closing: 21, // 21:00
       }
     },
     sunday: {
-      opening: 12,
-      closing: 21,
+      opening: 12, // 12:00
+      closing: 21, // 21:00
     },
     closedDays: [1] // Monday is closed by default
   },
