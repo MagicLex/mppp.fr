@@ -48,20 +48,29 @@ function HeaderWithRoute() {
 }
 
 function Footer() {
-  // State to store current time
-  const [currentTime, setCurrentTime] = useState<string>('');
+  // State to store current times
+  const [restaurantTime, setRestaurantTime] = useState<string>('');
+  const [browserTime, setBrowserTime] = useState<string>('');
   
   useEffect(() => {
-    // Function to update the current time in French format
+    // Function to update the current times
     const updateTime = () => {
       const now = new Date();
-      // Format time in France timezone as HH:MM
-      const options: Intl.DateTimeFormatOptions = { 
+      
+      // Format time in France timezone as HH:MM (restaurant time)
+      const franceOptions: Intl.DateTimeFormatOptions = { 
         timeZone: 'Europe/Paris',
         hour: '2-digit', 
         minute: '2-digit' 
       };
-      setCurrentTime(now.toLocaleTimeString('fr-FR', options));
+      setRestaurantTime(now.toLocaleTimeString('fr-FR', franceOptions));
+      
+      // Format browser's local time as HH:MM
+      const localOptions: Intl.DateTimeFormatOptions = { 
+        hour: '2-digit', 
+        minute: '2-digit' 
+      };
+      setBrowserTime(now.toLocaleTimeString('fr-FR', localOptions));
     };
     
     // Update time immediately
@@ -82,11 +91,10 @@ function Footer() {
           <span className="text-amber-900">|</span>
           <Link to="/conditions-generales" className="text-amber-900 hover:underline">Conditions Générales</Link>
         </nav>
-        {currentTime && (
-          <div className="text-amber-900 mt-1">
-            <span>Heure locale: {currentTime}</span>
-          </div>
-        )}
+        <div className="text-amber-900 mt-2 flex justify-center flex-wrap gap-4">
+          <span><strong>Heure en France:</strong> {restaurantTime}</span>
+          <span><strong>Heure locale:</strong> {browserTime}</span>
+        </div>
       </div>
     </footer>
   );

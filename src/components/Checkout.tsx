@@ -137,11 +137,16 @@ export default function Checkout() {
   // PayPlug payment has been removed as we're only using Stripe now
 
   const generateTimeSlots = () => {
-    // Get current time
+    // Get current time in France timezone regardless of user's location
     const now = new Date();
-    const currentHour = now.getHours();
-    const currentMinute = now.getMinutes();
-    const currentDay = now.getDay(); // 0 = Sunday, 1 = Monday, etc.
+    const options = { timeZone: 'Europe/Paris' };
+    const franceDate = new Date(now.toLocaleString('en-US', options));
+    const currentHour = franceDate.getHours();
+    const currentMinute = franceDate.getMinutes();
+    const currentDay = franceDate.getDay(); // 0 = Sunday, 1 = Monday, etc.
+    
+    // Log France time for debugging
+    console.log(`France time: ${currentHour}:${currentMinute}, Day: ${currentDay}`);
     
     // Only show time slots if we're within or approaching business hours
     if (currentHour < 9 || currentHour >= 22) {

@@ -29,10 +29,13 @@ export const RESTAURANT_CONFIG = {
 };
 
 export function isRestaurantOpen(): boolean {
+  // Get current time in France timezone regardless of user's location
   const now = new Date();
-  const currentHour = now.getHours();
-  const currentMinute = now.getMinutes();
-  const currentDay = now.getDay(); // 0 = Sunday, 1 = Monday, etc.
+  const options = { timeZone: 'Europe/Paris' };
+  const franceDate = new Date(now.toLocaleString('en-US', options));
+  const currentHour = franceDate.getHours();
+  const currentMinute = franceDate.getMinutes();
+  const currentDay = franceDate.getDay(); // 0 = Sunday, 1 = Monday, etc.
   
   // Convert current time to decimal hours (e.g., 11:30 -> 11.5)
   const currentTimeDecimal = currentHour + (currentMinute / 60);
@@ -75,10 +78,13 @@ export function isRestaurantOpen(): boolean {
 }
 
 export function getRestaurantStatus(): {isOpen: boolean; message: string} {
+  // Get current time in France timezone regardless of user's location
   const now = new Date();
-  const currentHour = now.getHours();
-  const currentMinute = now.getMinutes();
-  const currentDay = now.getDay(); // 0 = Sunday, 1 = Monday, etc.
+  const options = { timeZone: 'Europe/Paris' };
+  const franceDate = new Date(now.toLocaleString('en-US', options));
+  const currentHour = franceDate.getHours();
+  const currentMinute = franceDate.getMinutes();
+  const currentDay = franceDate.getDay(); // 0 = Sunday, 1 = Monday, etc.
   
   // Convert current time to decimal hours (e.g., 11:30 -> 11.5)
   const currentTimeDecimal = currentHour + (currentMinute / 60);
