@@ -48,29 +48,21 @@ function HeaderWithRoute() {
 }
 
 function Footer() {
-  // State to store current times
-  const [restaurantTime, setRestaurantTime] = useState<string>('');
-  const [browserTime, setBrowserTime] = useState<string>('');
+  // State to store current France time
+  const [franceTime, setFranceTime] = useState<string>('');
   
   useEffect(() => {
-    // Function to update the current times
+    // Function to update the current time in France
     const updateTime = () => {
       const now = new Date();
       
-      // Format time in France timezone as HH:MM (restaurant time)
-      const franceOptions: Intl.DateTimeFormatOptions = { 
+      // Format time in France timezone as HH:MM
+      const options: Intl.DateTimeFormatOptions = { 
         timeZone: 'Europe/Paris',
         hour: '2-digit', 
         minute: '2-digit' 
       };
-      setRestaurantTime(now.toLocaleTimeString('fr-FR', franceOptions));
-      
-      // Format browser's local time as HH:MM
-      const localOptions: Intl.DateTimeFormatOptions = { 
-        hour: '2-digit', 
-        minute: '2-digit' 
-      };
-      setBrowserTime(now.toLocaleTimeString('fr-FR', localOptions));
+      setFranceTime(now.toLocaleTimeString('fr-FR', options));
     };
     
     // Update time immediately
@@ -91,9 +83,8 @@ function Footer() {
           <span className="text-amber-900">|</span>
           <Link to="/conditions-generales" className="text-amber-900 hover:underline">Conditions Générales</Link>
         </nav>
-        <div className="text-amber-900 mt-2 flex justify-center flex-wrap gap-4">
-          <span><strong>Heure en France:</strong> {restaurantTime}</span>
-          <span><strong>Heure locale:</strong> {browserTime}</span>
+        <div className="text-amber-900 mt-2">
+          <span>Heure actuelle: {franceTime}</span>
         </div>
       </div>
     </footer>
