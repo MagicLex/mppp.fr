@@ -60,9 +60,12 @@ function formatHTML(order) {
     .map(item => `<li>${item}</li>`)
     .join('');
   
-  // Calculate estimated ready time
+  // Calculate estimated ready time in France timezone
   let readyTimeEstimate = '';
-  const orderDateTime = new Date(`${order.date.split('/').reverse().join('-')}T${order.time}`);
+  
+  // Get the current time in France
+  const options = { timeZone: 'Europe/Paris' };
+  const orderDateTime = new Date(new Date().toLocaleString('en-US', options));
   
   // Ensure minimum preparation time of 25 minutes
   const minPreparationMinutes = 25;
@@ -70,7 +73,11 @@ function formatHTML(order) {
   if (order.pickup_time === 'ASAP') {
     // Use minimum 25 minutes for ASAP orders
     const readyTime = new Date(orderDateTime.getTime() + minPreparationMinutes * 60000);
-    readyTimeEstimate = readyTime.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
+    readyTimeEstimate = readyTime.toLocaleTimeString('fr-FR', { 
+      timeZone: 'Europe/Paris',
+      hour: '2-digit', 
+      minute: '2-digit' 
+    });
   } else if (order.pickup_time.endsWith('min')) {
     // Extract the number of minutes
     let minutes = parseInt(order.pickup_time.replace('min', ''));
@@ -79,7 +86,11 @@ function formatHTML(order) {
     minutes = Math.max(minutes, minPreparationMinutes);
     
     const readyTime = new Date(orderDateTime.getTime() + minutes * 60000);
-    readyTimeEstimate = readyTime.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
+    readyTimeEstimate = readyTime.toLocaleTimeString('fr-FR', { 
+      timeZone: 'Europe/Paris',
+      hour: '2-digit', 
+      minute: '2-digit' 
+    });
   }
 
   return `
@@ -182,9 +193,12 @@ function formatPlain(order) {
     readablePickupTime = 'Dans 2 heures';
   }
   
-  // Calculate estimated ready time
+  // Calculate estimated ready time in France timezone
   let readyTimeEstimate = '';
-  const orderDateTime = new Date(`${order.date.split('/').reverse().join('-')}T${order.time}`);
+  
+  // Get the current time in France
+  const options = { timeZone: 'Europe/Paris' };
+  const orderDateTime = new Date(new Date().toLocaleString('en-US', options));
   
   // Ensure minimum preparation time of 25 minutes
   const minPreparationMinutes = 25;
@@ -192,7 +206,11 @@ function formatPlain(order) {
   if (order.pickup_time === 'ASAP') {
     // Use minimum 25 minutes for ASAP orders
     const readyTime = new Date(orderDateTime.getTime() + minPreparationMinutes * 60000);
-    readyTimeEstimate = readyTime.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
+    readyTimeEstimate = readyTime.toLocaleTimeString('fr-FR', { 
+      timeZone: 'Europe/Paris',
+      hour: '2-digit', 
+      minute: '2-digit' 
+    });
   } else if (order.pickup_time.endsWith('min')) {
     // Extract the number of minutes
     let minutes = parseInt(order.pickup_time.replace('min', ''));
@@ -201,7 +219,11 @@ function formatPlain(order) {
     minutes = Math.max(minutes, minPreparationMinutes);
     
     const readyTime = new Date(orderDateTime.getTime() + minutes * 60000);
-    readyTimeEstimate = readyTime.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
+    readyTimeEstimate = readyTime.toLocaleTimeString('fr-FR', { 
+      timeZone: 'Europe/Paris',
+      hour: '2-digit', 
+      minute: '2-digit' 
+    });
   }
   
   // Format items as a readable list
@@ -322,15 +344,24 @@ export default async function handler(req, res) {
           // Extract customer details
           const customerDetails = session.customer_details || {};
           
-          // Format order time
-          const orderTime = session.metadata?.order_time || new Date().toISOString();
-          const orderDate = new Date(orderTime);
+          // Format order time using France timezone
+          let orderDate;
           
-          // Format date as DD/MM/YYYY
-          const date = orderDate.toLocaleDateString('fr-FR');
+          if (session.metadata?.order_time) {
+            // Use the order_time from metadata (which should be in France time)
+            orderDate = new Date(session.metadata.order_time);
+          } else {
+            // Fallback: Get current time in France
+            const options = { timeZone: 'Europe/Paris' };
+            orderDate = new Date(new Date().toLocaleString('en-US', options));
+          }
           
-          // Format time as HH:MM
+          // Format date as DD/MM/YYYY in French format
+          const date = orderDate.toLocaleDateString('fr-FR', { timeZone: 'Europe/Paris' });
+          
+          // Format time as HH:MM in French format
           const time = orderDate.toLocaleTimeString('fr-FR', { 
+            timeZone: 'Europe/Paris',
             hour: '2-digit', 
             minute: '2-digit' 
           });

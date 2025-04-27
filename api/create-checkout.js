@@ -108,6 +108,57 @@ export default async function handler(req, res) {
     
     const { items, orderDetails } = req.body;
     
+    // Validate pickup time to ensure it's not beyond 30 minutes after closing
+    if (!override && orderDetails?.pickupTime) {
+      const now = new Date();
+      const options = { timeZone: 'Europe/Paris' };
+      const franceDate = new Date(now.toLocaleString('en-US', options));
+      const franceHour = franceDate.getHours();
+      const franceMinute = franceDate.getMinutes();
+      const franceDay = franceDate.getDay();
+      
+      // Get requested pickup time in minutes from now
+      let requestedMinutes = 0;
+      
+      if (orderDetails.pickupTime.endsWith('min')) {
+        requestedMinutes = parseInt(orderDetails.pickupTime.replace('min', ''));
+      } else if (orderDetails.pickupTime === 'ASAP') {
+        requestedMinutes = 30; // Assume 30 minutes for ASAP
+      }
+      
+      // Determine restaurant closing time for today
+      let closingHour = 0;
+      let closingMinute = 0;
+      
+      // Is it Sunday?
+      if (franceDay === 0) {
+        closingHour = 21; // 21:00
+        closingMinute = 0;
+      } else if (franceDay !== 1) { // Not Monday (closed)
+        // For other days, determine if we're in lunch or dinner service
+        if (franceHour < 14) {
+          // Lunch service
+          closingHour = 14; // 14:00
+          closingMinute = 0;
+        } else {
+          // Dinner service
+          closingHour = 21; // 21:00
+          closingMinute = 0;
+        }
+      }
+      
+      // Calculate minutes until closing
+      const closingTimeInMinutes = (closingHour * 60 + closingMinute) - (franceHour * 60 + franceMinute);
+      
+      // If requested pickup time exceeds 30 minutes after closing
+      if (requestedMinutes > (closingTimeInMinutes + 30)) {
+        return res.status(400).json({
+          error: 'Invalid pickup time',
+          message: "L'heure de retrait demandée n'est pas valide. Elle ne peut pas être plus de 30 minutes après la fermeture du restaurant."
+        });
+      }
+    }
+    
     if (!items || !items.length) {
       return res.status(400).json({ error: 'No items provided for checkout' });
     }

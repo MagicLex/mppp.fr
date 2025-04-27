@@ -99,10 +99,11 @@ export default function Checkout() {
     setIsProcessing(true);
 
     try {
-      // Create simplified order details for Stripe
+      // Create simplified order details for Stripe with French timezone
       const stripeOrderDetails = {
         pickupTime: orderDetails.pickupTime,
-        notes: orderDetails.notes || 'Aucune instruction particulière'
+        notes: orderDetails.notes || 'Aucune instruction particulière',
+        order_time: new Date().toLocaleString('en-US', { timeZone: 'Europe/Paris' })
       };
       
       // Create Stripe checkout session through our Vercel serverless function
@@ -136,27 +137,57 @@ export default function Checkout() {
   // PayPlug payment has been removed as we're only using Stripe now
 
   const generateTimeSlots = () => {
-    const slots = [];
-    
-    // Add relative time slots (30 min and beyond)
-    const relativeTimeSlots = [
-      { value: '30min', label: 'Dans 30 minutes' },
-      { value: '45min', label: 'Dans 45 minutes' },
-      { value: '60min', label: 'Dans 1 heure' },
-      { value: '90min', label: 'Dans 1h30' },
-      { value: '120min', label: 'Dans 2 heures' },
-    ];
-    
-    // Get current hour to check if we're within business hours
+    // Get current time
     const now = new Date();
     const currentHour = now.getHours();
+    const currentMinute = now.getMinutes();
+    const currentDay = now.getDay(); // 0 = Sunday, 1 = Monday, etc.
     
-    // Only show time slots if we're within or approaching business hours (11:00 - 22:00)
-    if (currentHour >= 9 && currentHour < 22) {
-      return relativeTimeSlots;
+    // Only show time slots if we're within or approaching business hours
+    if (currentHour < 9 || currentHour >= 22) {
+      return [];
     }
     
-    return [];
+    // Define potential time slots
+    const potentialSlots = [
+      { value: '30min', label: 'Dans 30 minutes', minutes: 30 },
+      { value: '45min', label: 'Dans 45 minutes', minutes: 45 },
+      { value: '60min', label: 'Dans 1 heure', minutes: 60 },
+      { value: '90min', label: 'Dans 1h30', minutes: 90 },
+      { value: '120min', label: 'Dans 2 heures', minutes: 120 },
+    ];
+    
+    // Determine restaurant closing time for today
+    let closingHour = 0;
+    let closingMinute = 0;
+    
+    // Is it Sunday?
+    if (currentDay === 0) {
+      closingHour = 21; // 21:00
+      closingMinute = 0;
+    } else if (currentDay !== 1) { // Not Monday (closed)
+      // For other days, determine if we're in lunch or dinner service
+      if (currentHour < 14) {
+        // Lunch service
+        closingHour = 14; // 14:00
+        closingMinute = 0;
+      } else {
+        // Dinner service
+        closingHour = 21; // 21:00
+        closingMinute = 0;
+      }
+    }
+    
+    // Calculate minutes until closing
+    const closingTimeInMinutes = (closingHour * 60 + closingMinute) - (currentHour * 60 + currentMinute);
+    
+    // Filter out time slots that would exceed 30 minutes after closing
+    // We allow pickup up to 30 minutes after closing
+    const validSlots = potentialSlots.filter(slot => {
+      return slot.minutes <= (closingTimeInMinutes + 30);
+    });
+    
+    return validSlots;
   };
 
   return (
