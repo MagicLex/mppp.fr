@@ -209,6 +209,24 @@ export function isRestaurantOpenWithOverrides(franceDate?: Date): boolean {
 }
 
 // Get detailed restaurant status with admin overrides
+// Helper function to format business hours for display throughout the app
+export function getFormattedBusinessHours(): string {
+  const settings = loadAdminSettings();
+  
+  // Format time with minutes if needed
+  const formatTimeDisplay = (time: number): string => {
+    const hours = Math.floor(time);
+    const minutes = Math.round((time - hours) * 60);
+    return minutes > 0 ? `${hours}h${minutes}` : `${hours}h`;
+  };
+  
+  return "Mardi-Samedi: " + 
+    `${formatTimeDisplay(settings.businessHours.weekdays.lunch.opening)}-${formatTimeDisplay(settings.businessHours.weekdays.lunch.closing)} / ` +
+    `${formatTimeDisplay(settings.businessHours.weekdays.dinner.opening)}-${formatTimeDisplay(settings.businessHours.weekdays.dinner.closing)} | ` +
+    `Dimanche: ${formatTimeDisplay(settings.businessHours.sunday.opening)}-${formatTimeDisplay(settings.businessHours.sunday.closing)} | ` +
+    "Fermé le lundi";
+}
+
 export function getRestaurantStatusWithOverrides(): {isOpen: boolean; message: string; adminOverride: boolean} {
   const settings = loadAdminSettings();
   
@@ -232,16 +250,6 @@ export function getRestaurantStatusWithOverrides(): {isOpen: boolean; message: s
     `${formatTimeDisplay(settings.businessHours.weekdays.dinner.opening)}-${formatTimeDisplay(settings.businessHours.weekdays.dinner.closing)} | ` +
     `Dimanche: ${formatTimeDisplay(settings.businessHours.sunday.opening)}-${formatTimeDisplay(settings.businessHours.sunday.closing)} | ` +
     "Fermé le lundi";
-    
-  // Export this function separately so it can be used by other components
-  export function getFormattedBusinessHours(): string {
-    const settings = loadAdminSettings();
-    return "Mardi-Samedi: " + 
-      `${formatTimeDisplay(settings.businessHours.weekdays.lunch.opening)}-${formatTimeDisplay(settings.businessHours.weekdays.lunch.closing)} / ` +
-      `${formatTimeDisplay(settings.businessHours.weekdays.dinner.opening)}-${formatTimeDisplay(settings.businessHours.weekdays.dinner.closing)} | ` +
-      `Dimanche: ${formatTimeDisplay(settings.businessHours.sunday.opening)}-${formatTimeDisplay(settings.businessHours.sunday.closing)} | ` +
-      "Fermé le lundi";
-  };
   
   // Force close overrides everything
   if (settings.forceClose) {
