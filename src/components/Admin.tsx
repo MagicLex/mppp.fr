@@ -37,6 +37,9 @@ export default function Admin() {
   // State to refresh the "open" status periodically
   const [refreshTrigger, setRefreshTrigger] = useState<number>(0);
   
+  // Reference for the debounce timeout
+  const timeoutRef = React.useRef<NodeJS.Timeout>();
+  
   // Get today's date for min date in datepicker
   const today = new Date();
   const todayString = today.toISOString().split('T')[0];
@@ -154,69 +157,98 @@ export default function Admin() {
   };
   
   // Toggle force close
-  const handleToggleForceClose = () => {
-    setSettings(prev => {
-      const updated = { ...prev, forceClose: !prev.forceClose };
-      saveAdminSettings(updated);
-      return updated;
-    });
-    
-    toast.success(settings.forceClose ? 
-      'Restaurant réouvert' : 
-      'Restaurant temporairement fermé'
-    );
+  const handleToggleForceClose = async () => {
+    setIsSaving(true);
+    try {
+      const updated = { ...settings, forceClose: !settings.forceClose };
+      
+      // Save to server via API
+      const result = await updateAdminConfig(auth.email, auth.password, updated);
+      
+      // Update local state with the result from the server
+      setSettings(result);
+      
+      toast.success(settings.forceClose ? 
+        'Restaurant réouvert' : 
+        'Restaurant temporairement fermé'
+      );
+    } catch (error) {
+      toast.error('Erreur lors de la mise à jour du statut');
+      console.error('Error toggling force close:', error);
+    } finally {
+      setIsSaving(false);
+    }
   };
   
   // Add special closing date
-  const handleAddSpecialClosing = () => {
+  const handleAddSpecialClosing = async () => {
     if (!selectedDate) {
       toast.error('Veuillez sélectionner une date');
       return;
     }
     
-    setSettings(prev => {
+    // Check if date already exists
+    if (settings.specialClosings.some(sc => sc.date === selectedDate)) {
+      toast.error('Cette date est déjà dans la liste des fermetures exceptionnelles');
+      return;
+    }
+    
+    setIsSaving(true);
+    try {
       const newClosing: SpecialClosing = { 
         date: selectedDate,
         reason: specialClosingReason || undefined
       };
       
-      // Check if date already exists
-      if (prev.specialClosings.some(sc => sc.date === selectedDate)) {
-        toast.error('Cette date est déjà dans la liste des fermetures exceptionnelles');
-        return prev;
-      }
-      
       const updated = {
-        ...prev,
-        specialClosings: [...prev.specialClosings, newClosing].sort((a, b) => a.date.localeCompare(b.date))
+        ...settings,
+        specialClosings: [...settings.specialClosings, newClosing]
+          .sort((a, b) => a.date.localeCompare(b.date))
       };
       
-      saveAdminSettings(updated);
-      return updated;
-    });
-    
-    toast.success(`Fermeture exceptionnelle ajoutée pour le ${formatDate(selectedDate)}`);
-    setSelectedDate('');
-    setSpecialClosingReason('');
+      // Save to server via API
+      const result = await updateAdminConfig(auth.email, auth.password, updated);
+      
+      // Update local state with the result from the server
+      setSettings(result);
+      
+      toast.success(`Fermeture exceptionnelle ajoutée pour le ${formatDate(selectedDate)}`);
+      setSelectedDate('');
+      setSpecialClosingReason('');
+    } catch (error) {
+      toast.error('Erreur lors de l\'ajout de la fermeture exceptionnelle');
+      console.error('Error adding special closing:', error);
+    } finally {
+      setIsSaving(false);
+    }
   };
   
   // Remove special closing date
-  const handleRemoveSpecialClosing = (date: string) => {
-    setSettings(prev => {
+  const handleRemoveSpecialClosing = async (date: string) => {
+    setIsSaving(true);
+    try {
       const updated = {
-        ...prev,
-        specialClosings: prev.specialClosings.filter(sc => sc.date !== date)
+        ...settings,
+        specialClosings: settings.specialClosings.filter(sc => sc.date !== date)
       };
       
-      saveAdminSettings(updated);
-      return updated;
-    });
-    
-    toast.success(`Fermeture exceptionnelle supprimée pour le ${formatDate(date)}`);
+      // Save to server via API
+      const result = await updateAdminConfig(auth.email, auth.password, updated);
+      
+      // Update local state with the result from the server
+      setSettings(result);
+      
+      toast.success(`Fermeture exceptionnelle supprimée pour le ${formatDate(date)}`);
+    } catch (error) {
+      toast.error('Erreur lors de la suppression de la fermeture exceptionnelle');
+      console.error('Error removing special closing:', error);
+    } finally {
+      setIsSaving(false);
+    }
   };
   
   // Update business hours
-  const handleUpdateHours = (
+  const handleUpdateHours = async (
     period: 'weekdays' | 'sunday',
     mealTime: 'lunch' | 'dinner' | null,
     field: 'opening' | 'closing',
@@ -225,61 +257,108 @@ export default function Admin() {
     const numValue = parseFloat(value);
     if (isNaN(numValue) || numValue < 0 || numValue > 24) return;
     
-    setSettings(prev => {
-      const updated = { ...prev };
-      
-      if (period === 'weekdays' && mealTime) {
-        updated.businessHours.weekdays[mealTime][field] = numValue;
-      } else if (period === 'sunday') {
-        updated.businessHours.sunday[field] = numValue;
+    // Avoid too many API calls - delay updates
+    clearTimeout(timeoutRef.current);
+    
+    timeoutRef.current = setTimeout(async () => {
+      setIsSaving(true);
+      try {
+        const updated = { ...settings };
+        
+        if (period === 'weekdays' && mealTime) {
+          updated.businessHours.weekdays[mealTime][field] = numValue;
+        } else if (period === 'sunday') {
+          updated.businessHours.sunday[field] = numValue;
+        }
+        
+        // Save to server via API
+        const result = await updateAdminConfig(auth.email, auth.password, updated);
+        
+        // Update local state with the result from the server
+        setSettings(result);
+        
+        toast.success('Horaires mis à jour');
+      } catch (error) {
+        toast.error('Erreur lors de la mise à jour des horaires');
+        console.error('Error updating hours:', error);
+      } finally {
+        setIsSaving(false);
       }
-      
-      saveAdminSettings(updated);
-      return updated;
-    });
+    }, 1000); // Debounce for 1 second
   };
   
   // Toggle closed day
-  const handleToggleClosedDay = (day: number) => {
-    setSettings(prev => {
-      const closedDays = [...prev.businessHours.closedDays];
+  const handleToggleClosedDay = async (day: number) => {
+    setIsSaving(true);
+    try {
+      const closedDays = [...settings.businessHours.closedDays];
+      let updated;
       
       if (closedDays.includes(day)) {
         // Remove day from closed days
-        const updated = {
-          ...prev,
+        updated = {
+          ...settings,
           businessHours: {
-            ...prev.businessHours,
+            ...settings.businessHours,
             closedDays: closedDays.filter(d => d !== day)
           }
         };
-        saveAdminSettings(updated);
-        return updated;
       } else {
         // Add day to closed days
-        const updated = {
-          ...prev,
+        updated = {
+          ...settings,
           businessHours: {
-            ...prev.businessHours,
+            ...settings.businessHours,
             closedDays: [...closedDays, day].sort()
           }
         };
-        saveAdminSettings(updated);
-        return updated;
       }
-    });
+      
+      // Save to server via API
+      const result = await updateAdminConfig(auth.email, auth.password, updated);
+      
+      // Update local state with the result from the server
+      setSettings(result);
+      
+      toast.success(closedDays.includes(day) ? 
+        `${getDayName(day)} marqué comme ouvert` : 
+        `${getDayName(day)} marqué comme fermé`
+      );
+    } catch (error) {
+      toast.error('Erreur lors de la mise à jour des jours de fermeture');
+      console.error('Error toggling closed day:', error);
+    } finally {
+      setIsSaving(false);
+    }
   };
   
   // Update order timing settings
-  const handleUpdateOrderTiming = (field: 'preorderMinutes' | 'lastOrderMinutes', value: string) => {
+  const handleUpdateOrderTiming = async (field: 'preorderMinutes' | 'lastOrderMinutes', value: string) => {
     const numValue = parseInt(value, 10);
     if (isNaN(numValue) || numValue < 0 || numValue > 120) return;
     
-    setSettings(prev => {
-      const updated = { ...prev, [field]: numValue };
-      saveAdminSettings(updated);
-      return updated;
-    });
+    // Debounce
+    clearTimeout(timeoutRef.current);
+    
+    timeoutRef.current = setTimeout(async () => {
+      setIsSaving(true);
+      try {
+        const updated = { ...settings, [field]: numValue };
+        
+        // Save to server via API
+        const result = await updateAdminConfig(auth.email, auth.password, updated);
+        
+        // Update local state with the result from the server
+        setSettings(result);
+        
+        toast.success('Paramètres de commande mis à jour');
+      } catch (error) {
+        toast.error('Erreur lors de la mise à jour des paramètres de commande');
+        console.error('Error updating order timing:', error);
+      } finally {
+        setIsSaving(false);
+      }
+    }, 1000); // Debounce for 1 second
   };
   
   // Get day name
@@ -311,19 +390,8 @@ export default function Admin() {
     // Calculate decimal time (e.g., 12:30 -> 12.5)
     const decimalTime = hours + (minutes / 60);
     
-    // Update settings
-    setSettings(prev => {
-      const updated = { ...prev };
-      
-      if (period === 'weekdays' && mealTime) {
-        updated.businessHours.weekdays[mealTime][field] = decimalTime;
-      } else if (period === 'sunday') {
-        updated.businessHours.sunday[field] = decimalTime;
-      }
-      
-      saveAdminSettings(updated);
-      return updated;
-    });
+    // Use the same update function to ensure server-side persistence
+    handleUpdateHours(period, mealTime, field, decimalTime.toString());
   };
   
   // If not authenticated, show login form
