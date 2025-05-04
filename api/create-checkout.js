@@ -1,6 +1,6 @@
 // Serverless function for creating Stripe checkout sessions
 import Stripe from 'stripe';
-import { isRestaurantForceClosed, isSpecialClosingDate } from './utils/adminSettings';
+import { isRestaurantForceClosed, isSpecialClosingDate } from './utils/adminSettings.js';
 
 // Initialize Stripe with the API key from environment variables
 const stripe = Stripe(process.env.STRIPE_SECRET_KEY);
@@ -38,7 +38,7 @@ const DEFAULT_RESTAURANT_CONFIG = {
 
 async function isRestaurantOpen() {
   // First check admin overrides
-  const { isRestaurantForceClosed, isSpecialClosingDate, getAdminSettings } = await import('./utils/adminSettings');
+  const { isRestaurantForceClosed, isSpecialClosingDate, getAdminSettings } = await import('./utils/adminSettings.js');
   
   const now = new Date();
   
@@ -125,7 +125,7 @@ export default async function handler(req, res) {
     
     if (!restaurantOpen && !override) {
       // Get admin settings for accurate hours in message
-      const { getAdminSettings } = await import('./utils/adminSettings');
+      const { getAdminSettings } = await import('./utils/adminSettings.js');
       const adminSettings = await getAdminSettings();
       const config = adminSettings || DEFAULT_RESTAURANT_CONFIG;
       
@@ -164,7 +164,7 @@ export default async function handler(req, res) {
       }
       
       // Get current settings for accurate closing times
-      const { getAdminSettings } = await import('./utils/adminSettings');
+      const { getAdminSettings } = await import('./utils/adminSettings.js');
       const adminSettings = await getAdminSettings();
       const config = adminSettings || DEFAULT_RESTAURANT_CONFIG;
       
