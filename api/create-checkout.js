@@ -1,15 +1,14 @@
 // Serverless function for creating Stripe checkout sessions
 import Stripe from 'stripe';
-import { isRestaurantForceClosed, isSpecialClosingDate } from './utils/adminSettings.js';
+// Import built-in modules directly
+import fs from 'fs';
+import path from 'path';
 
-// Initialize Stripe with the API key from environment variables
-const stripe = Stripe(process.env.STRIPE_SECRET_KEY);
-
-// Default restaurant configuration - will be overridden by admin settings from file
-// Must match src/data/constants.ts
-const DEFAULT_RESTAURANT_CONFIG = {
-  openingHours: {
-    // 24-hour format for week days (Tuesday-Saturday)
+// Default config that will be used if admin settings can't be loaded
+const DEFAULT_CONFIG = {
+  forceClose: false,
+  specialClosings: [],
+  businessHours: {
     weekdays: {
       lunch: {
         opening: 12, // 12:00
@@ -20,26 +19,93 @@ const DEFAULT_RESTAURANT_CONFIG = {
         closing: 21, // 21:00
       }
     },
-    // Sunday has continuous hours
     sunday: {
       opening: 12, // 12:00
       closing: 21, // 21:00
     },
-    // Restaurant is closed on Monday
-    closedDays: [1], // 0 = Sunday, 1 = Monday, etc.
+    closedDays: [1] // Monday is closed by default
   },
-  // Allow ordering 30 minutes before opening
   preorderMinutes: 30,
-  // Stop orders 30 minutes before closing
   lastOrderMinutes: 30
 };
 
-// We'll get the actual config from utils/adminSettings.js inside isRestaurantOpen
+// Initialize Stripe with the API key from environment variables
+const stripe = Stripe(process.env.STRIPE_SECRET_KEY);
+
+// This is for backwards compatibility with the old structure
+// Must match src/data/constants.ts
+const DEFAULT_RESTAURANT_CONFIG = {
+  openingHours: {
+    // 24-hour format for week days (Tuesday-Saturday)
+    weekdays: {
+      lunch: {
+        opening: DEFAULT_CONFIG.businessHours.weekdays.lunch.opening,
+        closing: DEFAULT_CONFIG.businessHours.weekdays.lunch.closing
+      },
+      dinner: {
+        opening: DEFAULT_CONFIG.businessHours.weekdays.dinner.opening,
+        closing: DEFAULT_CONFIG.businessHours.weekdays.dinner.closing
+      }
+    },
+    // Sunday has continuous hours
+    sunday: {
+      opening: DEFAULT_CONFIG.businessHours.sunday.opening,
+      closing: DEFAULT_CONFIG.businessHours.sunday.closing
+    },
+    // Restaurant is closed on Monday
+    closedDays: [...DEFAULT_CONFIG.businessHours.closedDays],
+  },
+  // Allow ordering 30 minutes before opening
+  preorderMinutes: DEFAULT_CONFIG.preorderMinutes,
+  // Stop orders 30 minutes before closing
+  lastOrderMinutes: DEFAULT_CONFIG.lastOrderMinutes
+};
+
+// Implement the admin settings functions directly in this file
+// to avoid import issues with Vercel deployment
+
+// Check if restaurant is force closed based on admin settings
+async function isRestaurantForceClosed() {
+  try {
+    const settings = await getAdminSettings();
+    return settings.forceClose === true;
+  } catch (error) {
+    console.error('Error checking force closed status:', error);
+    return false;
+  }
+}
+
+// Check if a date is a special closing date
+async function isSpecialClosingDate(date) {
+  try {
+    const settings = await getAdminSettings();
+    
+    // Format date as YYYY-MM-DD
+    const dateStr = typeof date === 'string' 
+      ? date 
+      : date.toISOString().split('T')[0];
+    
+    return settings.specialClosings.some(sc => sc.date === dateStr);
+  } catch (error) {
+    console.error('Error checking special closings:', error);
+    return false;
+  }
+}
+
+// Get admin settings
+async function getAdminSettings() {
+  try {
+    // In serverless environment, use environment variables or default config
+    // We can't rely on file storage in Vercel Functions
+    return DEFAULT_CONFIG;
+  } catch (error) {
+    console.error('Error getting admin settings:', error);
+    return DEFAULT_CONFIG;
+  }
+}
 
 async function isRestaurantOpen() {
-  // First check admin overrides
-  const { isRestaurantForceClosed, isSpecialClosingDate, getAdminSettings } = await import('./utils/adminSettings.js');
-  
+  // Use the local implementations
   const now = new Date();
   
   // Get current hour and day in France timezone
@@ -69,22 +135,35 @@ async function isRestaurantOpen() {
   const config = adminSettings || DEFAULT_RESTAURANT_CONFIG;
   
   // Is it a closed day? (Using admin settings which may have been modified)
-  if (config.businessHours.closedDays.includes(franceDay)) {
+  if (config.openingHours && config.openingHours.closedDays && config.openingHours.closedDays.includes(franceDay)) {
     console.log(`Restaurant is closed on day ${franceDay}`);
+    return false;
+  }
+  
+  // Alternative check for new structure
+  if (config.businessHours && config.businessHours.closedDays && config.businessHours.closedDays.includes(franceDay)) {
+    console.log(`Restaurant is closed on day ${franceDay} (new config structure)`);
     return false;
   }
   
   // Is it Sunday?
   if (franceDay === 0) {
-    const openTime = config.businessHours.sunday.opening;
-    const closeTime = config.businessHours.sunday.closing;
+    // Handle both config structures
+    const openTime = config.businessHours?.sunday?.opening || 
+                     config.openingHours?.sunday?.opening || 12;
+    const closeTime = config.businessHours?.sunday?.closing || 
+                      config.openingHours?.sunday?.closing || 21;
     
     // Convert to decimal time for simpler comparison (e.g., 11:30 = 11.5)
     const currentDecimal = franceHour + (franceMinute / 60);
     
+    // Get preorder and last order minutes, with fallbacks
+    const preorderMinutes = config.preorderMinutes || config.preorderMinutes || 30;
+    const lastOrderMinutes = config.lastOrderMinutes || config.lastOrderMinutes || 30;
+    
     // Can order 30 min before opening until 30 min before closing
-    const effectiveOpenTime = openTime - (config.preorderMinutes / 60);
-    const effectiveCloseTime = closeTime - (config.lastOrderMinutes / 60);
+    const effectiveOpenTime = openTime - (preorderMinutes / 60);
+    const effectiveCloseTime = closeTime - (lastOrderMinutes / 60);
     
     return currentDecimal >= effectiveOpenTime && currentDecimal <= effectiveCloseTime;
   }
@@ -92,17 +171,25 @@ async function isRestaurantOpen() {
   // It's Tuesday-Saturday - check lunch and dinner hours
   const currentDecimal = franceHour + (franceMinute / 60);
   
-  // Lunch service
-  const lunchOpen = config.businessHours.weekdays.lunch.opening;
-  const lunchClose = config.businessHours.weekdays.lunch.closing;
-  const effectiveLunchOpen = lunchOpen - (config.preorderMinutes / 60);
-  const effectiveLunchClose = lunchClose - (config.lastOrderMinutes / 60);
+  // Get preorder and last order minutes, with fallbacks
+  const preorderMinutes = config.preorderMinutes || config.preorderMinutes || 30;
+  const lastOrderMinutes = config.lastOrderMinutes || config.lastOrderMinutes || 30;
   
-  // Dinner service  
-  const dinnerOpen = config.businessHours.weekdays.dinner.opening;
-  const dinnerClose = config.businessHours.weekdays.dinner.closing;
-  const effectiveDinnerOpen = dinnerOpen - (config.preorderMinutes / 60);
-  const effectiveDinnerClose = dinnerClose - (config.lastOrderMinutes / 60);
+  // Lunch service - handle both config structures
+  const lunchOpen = config.businessHours?.weekdays?.lunch?.opening || 
+                     config.openingHours?.weekdays?.lunch?.opening || 12;
+  const lunchClose = config.businessHours?.weekdays?.lunch?.closing || 
+                     config.openingHours?.weekdays?.lunch?.closing || 14;
+  const effectiveLunchOpen = lunchOpen - (preorderMinutes / 60);
+  const effectiveLunchClose = lunchClose - (lastOrderMinutes / 60);
+  
+  // Dinner service - handle both config structures  
+  const dinnerOpen = config.businessHours?.weekdays?.dinner?.opening || 
+                     config.openingHours?.weekdays?.dinner?.opening || 19;
+  const dinnerClose = config.businessHours?.weekdays?.dinner?.closing || 
+                     config.openingHours?.weekdays?.dinner?.closing || 21;
+  const effectiveDinnerOpen = dinnerOpen - (preorderMinutes / 60);
+  const effectiveDinnerClose = dinnerClose - (lastOrderMinutes / 60);
   
   // Check if we're in lunch or dinner service time window
   const isLunchOpen = currentDecimal >= effectiveLunchOpen && currentDecimal <= effectiveLunchClose;
@@ -125,7 +212,6 @@ export default async function handler(req, res) {
     
     if (!restaurantOpen && !override) {
       // Get admin settings for accurate hours in message
-      const { getAdminSettings } = await import('./utils/adminSettings.js');
       const adminSettings = await getAdminSettings();
       const config = adminSettings || DEFAULT_RESTAURANT_CONFIG;
       
@@ -164,7 +250,6 @@ export default async function handler(req, res) {
       }
       
       // Get current settings for accurate closing times
-      const { getAdminSettings } = await import('./utils/adminSettings.js');
       const adminSettings = await getAdminSettings();
       const config = adminSettings || DEFAULT_RESTAURANT_CONFIG;
       
