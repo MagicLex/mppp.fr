@@ -21,7 +21,9 @@ export interface OrderOption {
 }
 
 export interface OrderDetails {
+  pickupDate: string;
   pickupTime: string;
+  formattedPickup?: string;
   notes?: string;
 }
 

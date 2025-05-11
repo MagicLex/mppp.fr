@@ -113,16 +113,20 @@ function App() {
               <Route path="/admin1988" element={<Admin />} />
             </Routes>
           </main>
-          <Toaster 
+          <Toaster
             position="top-center"
             reverseOrder={false}
             gutter={8}
+            containerClassName="react-hot-toast-container"
             containerStyle={{
               top: 20,
               margin: '0 auto',
             }}
             toastOptions={{
-              duration: 3000,
+              // Shorter default duration
+              duration: 2000,
+              // Force toasts to automatically dismiss on page change
+              id: location.pathname,
               style: {
                 background: '#fff',
                 color: '#333',
@@ -133,7 +137,7 @@ function App() {
                 maxWidth: '500px',
                 width: '100%',
               },
-            }} 
+            }}
           />
           {/* Footer with local time */}
           <Footer />

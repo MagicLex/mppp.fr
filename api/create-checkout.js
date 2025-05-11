@@ -207,85 +207,66 @@ export default async function handler(req, res) {
     // Allow override for testing
     const override = req.query.override === 'true' || req.body.override === true;
     
-    // Check if restaurant is currently accepting orders
-    const restaurantOpen = await isRestaurantOpen();
-    
-    if (!restaurantOpen && !override) {
-      // Get admin settings for accurate hours in message
-      const adminSettings = await getAdminSettings();
-      const config = adminSettings || DEFAULT_RESTAURANT_CONFIG;
-      
-      // Format hours for display in a user-friendly way
-      const lunchHours = `${Math.floor(config.businessHours.weekdays.lunch.opening)}h-${Math.floor(config.businessHours.weekdays.lunch.closing)}h`;
-      const dinnerHours = `${Math.floor(config.businessHours.weekdays.dinner.opening)}h-${Math.floor(config.businessHours.weekdays.dinner.closing)}h`;
-      const sundayHours = `${Math.floor(config.businessHours.sunday.opening)}h-${Math.floor(config.businessHours.sunday.closing)}h`;
-      
-      // Dynamic hours message
-      const hoursMessage = `Mardi-Samedi: ${lunchHours} / ${dinnerHours} | Dimanche: ${sundayHours} | Fermé le lundi`;
-      
-      return res.status(400).json({ 
-        error: 'Restaurant is closed',
-        message: `Le restaurant n'accepte pas de commandes pour le moment. Horaires: ${hoursMessage} (commandes ${config.lastOrderMinutes}min avant la fermeture)`
-      });
-    }
+    // No longer checking if restaurant is currently open
+    // Orders can be placed at any time for future pickup
     
     const { items, orderDetails } = req.body;
     
-    // Validate pickup time to ensure it's not beyond 30 minutes after closing
-    if (!override && orderDetails?.pickupTime) {
-      const now = new Date();
-      const options = { timeZone: 'Europe/Paris' };
-      const franceDate = new Date(now.toLocaleString('en-US', options));
-      const franceHour = franceDate.getHours();
-      const franceMinute = franceDate.getMinutes();
-      const franceDay = franceDate.getDay();
-      
-      // Get requested pickup time in minutes from now
-      let requestedMinutes = 0;
-      
-      if (orderDetails.pickupTime.endsWith('min')) {
-        requestedMinutes = parseInt(orderDetails.pickupTime.replace('min', ''));
-      } else if (orderDetails.pickupTime === 'ASAP') {
-        requestedMinutes = 30; // Assume 30 minutes for ASAP
-      }
-      
-      // Get current settings for accurate closing times
+    // Validate pickup date and time are within business hours
+    if (!override && orderDetails?.pickupDate && orderDetails?.pickupTime) {
+      // Get the pickup date and time
+      const pickupDate = new Date(`${orderDetails.pickupDate}T${orderDetails.pickupTime}:00`);
+      const pickupDay = pickupDate.getDay(); // 0 = Sunday, 1 = Monday, etc.
+      const pickupHour = pickupDate.getHours();
+      const pickupMinute = pickupDate.getMinutes();
+
+      // Get current settings for business hours
       const adminSettings = await getAdminSettings();
       const config = adminSettings || DEFAULT_RESTAURANT_CONFIG;
-      
-      // Determine restaurant closing time for today
-      let closingHour = 0;
-      let closingMinute = 0;
-      
-      // Is it Sunday?
-      if (franceDay === 0) {
-        // Use admin settings for Sunday hours
-        const sundayClosing = config.businessHours.sunday.closing;
-        closingHour = Math.floor(sundayClosing);
-        closingMinute = Math.round((sundayClosing - closingHour) * 60);
-      } else if (franceDay !== 1 && !config.businessHours.closedDays.includes(franceDay)) {
-        // For other days, determine if we're in lunch or dinner service
-        if (franceHour < config.businessHours.weekdays.lunch.closing) {
-          // Lunch service
-          const lunchClosing = config.businessHours.weekdays.lunch.closing;
-          closingHour = Math.floor(lunchClosing);
-          closingMinute = Math.round((lunchClosing - closingHour) * 60);
-        } else {
-          // Dinner service
-          const dinnerClosing = config.businessHours.weekdays.dinner.closing;
-          closingHour = Math.floor(dinnerClosing);
-          closingMinute = Math.round((dinnerClosing - closingHour) * 60);
-        }
+
+      // Check if the pickup day is a closed day
+      if (config.businessHours.closedDays.includes(pickupDay)) {
+        return res.status(400).json({
+          error: 'Invalid pickup day',
+          message: "Le jour de retrait choisi correspond à un jour de fermeture du restaurant."
+        });
       }
-      
-      // Calculate minutes until closing
-      const closingTimeInMinutes = (closingHour * 60 + closingMinute) - (franceHour * 60 + franceMinute);
-      
-      // If requested pickup time exceeds 30 minutes after closing
-      if (requestedMinutes > (closingTimeInMinutes + 30)) {
+
+      // Convert pickup time to decimal
+      const pickupTimeDecimal = pickupHour + (pickupMinute / 60);
+
+      // Check if the pickup time is within business hours
+      let isValidTime = false;
+
+      if (pickupDay === 0) {
+        // Sunday
+        const openingTime = config.businessHours.sunday.opening;
+        const closingTime = config.businessHours.sunday.closing;
+        isValidTime = pickupTimeDecimal >= openingTime && pickupTimeDecimal <= closingTime;
+      } else {
+        // Weekday - check both lunch and dinner hours
+        const lunchOpening = config.businessHours.weekdays.lunch.opening;
+        const lunchClosing = config.businessHours.weekdays.lunch.closing;
+        const dinnerOpening = config.businessHours.weekdays.dinner.opening;
+        const dinnerClosing = config.businessHours.weekdays.dinner.closing;
+
+        const isLunchHours = pickupTimeDecimal >= lunchOpening && pickupTimeDecimal <= lunchClosing;
+        const isDinnerHours = pickupTimeDecimal >= dinnerOpening && pickupTimeDecimal <= dinnerClosing;
+
+        isValidTime = isLunchHours || isDinnerHours;
+      }
+
+      if (!isValidTime) {
+        // Format business hours for display
+        const lunchHours = `${Math.floor(config.businessHours.weekdays.lunch.opening)}h-${Math.floor(config.businessHours.weekdays.lunch.closing)}h`;
+        const dinnerHours = `${Math.floor(config.businessHours.weekdays.dinner.opening)}h-${Math.floor(config.businessHours.weekdays.dinner.closing)}h`;
+        const sundayHours = `${Math.floor(config.businessHours.sunday.opening)}h-${Math.floor(config.businessHours.sunday.closing)}h`;
+
+        const hoursMessage = `Mardi-Samedi: ${lunchHours} / ${dinnerHours} | Dimanche: ${sundayHours} | Fermé le lundi`;
+
         return res.status(400).json({
           error: 'Invalid pickup time',
-          message: "L'heure de retrait demandée n'est pas valide. Elle ne peut pas être plus de 30 minutes après la fermeture du restaurant."
+          message: `L'heure de retrait choisie n'est pas dans les horaires d'ouverture du restaurant. Horaires: ${hoursMessage}`
         });
       }
     }
@@ -325,7 +306,9 @@ export default async function handler(req, res) {
     
     // Store order details in metadata
     const metadata = {
-      pickup_time: orderDetails?.pickupTime || 'ASAP',
+      pickup_date: orderDetails?.pickupDate || '',
+      pickup_time: orderDetails?.pickupTime || '',
+      formatted_pickup: orderDetails?.formattedPickup || `${orderDetails?.pickupDate || ''} à ${orderDetails?.pickupTime || ''}`,
       notes: orderDetails?.notes || 'Aucune instruction particulière',
       order_time: new Date().toISOString(),
     };

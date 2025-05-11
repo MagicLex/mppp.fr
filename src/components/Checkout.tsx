@@ -11,7 +11,14 @@ import { isRestaurantOpenWithOverrides, getRestaurantStatusWithOverrides, loadAd
 export default function Checkout() {
   const navigate = useNavigate();
   const { items, total } = useCart();
+  // Get today's date in YYYY-MM-DD format for default pickup date
+  const today = new Date();
+  const options = { timeZone: 'Europe/Paris' };
+  const franceDate = new Date(today.toLocaleString('en-US', options));
+  const defaultPickupDate = franceDate.toISOString().split('T')[0]; // YYYY-MM-DD
+
   const [orderDetails, setOrderDetails] = useState({
+    pickupDate: defaultPickupDate,
     pickupTime: '',
     notes: ''
   });
@@ -37,42 +44,29 @@ export default function Checkout() {
     return null;
   }
   
-  // If restaurant is closed, show a message
-  if (!restaurantStatus.isOpen) {
-    return (
-      <div className="max-w-2xl mx-auto space-y-8">
-        <h2 className="text-3xl font-bold text-amber-900">Finaliser la commande</h2>
-        <div className="card-cartoon p-6 space-y-6">
-          <div className="text-center p-4 bg-red-100 rounded-lg border-4 border-red-500">
-            <h3 className="text-xl font-bold text-red-700 mb-2">Restaurant fermé</h3>
-            <p className="text-red-700 mb-4">{restaurantStatus.message}</p>
-            <button 
-              onClick={() => navigate('/')} 
-              className="btn-cartoon bg-amber-400 text-black py-2 px-4 rounded-xl"
-            >
-              Retour au menu
-            </button>
-          </div>
-        </div>
-      </div>
-    );
-  }
+  // We no longer check if restaurant is open
+  // Orders can be placed at any time for future pickup
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     // Log form data before submission
     console.log('Form submission - Order details:', orderDetails);
-    
-    // Validate pickup time
-    if (!orderDetails.pickupTime?.trim()) {
-      alert('Veuillez indiquer une heure de retrait');
+
+    // Validate pickup date and time
+    if (!orderDetails.pickupDate?.trim()) {
+      alert('Veuillez choisir une date de retrait');
       return;
     }
-    
+
+    if (!orderDetails.pickupTime?.trim()) {
+      alert('Veuillez choisir une heure de retrait');
+      return;
+    }
+
     // Show payment options directly
     setShowPaymentOptions(true);
-    
+
     // Track begin checkout event
     trackBeginCheckout(
       items.map(item => ({
@@ -102,7 +96,9 @@ export default function Checkout() {
     try {
       // Create simplified order details for Stripe with French timezone
       const stripeOrderDetails = {
+        pickupDate: orderDetails.pickupDate,
         pickupTime: orderDetails.pickupTime,
+        formattedPickup: `${orderDetails.pickupDate} à ${orderDetails.pickupTime}`,
         notes: orderDetails.notes || 'Aucune instruction particulière',
         order_time: new Date().toLocaleString('en-US', { timeZone: 'Europe/Paris' })
       };
@@ -137,71 +133,172 @@ export default function Checkout() {
 
   // PayPlug payment has been removed as we're only using Stripe now
 
-  const generateTimeSlots = () => {
+  const generatePickupOptions = () => {
     // Get current time in France timezone regardless of user's location
     const now = new Date();
     const options = { timeZone: 'Europe/Paris' };
     const franceDate = new Date(now.toLocaleString('en-US', options));
-    const currentHour = franceDate.getHours();
-    const currentMinute = franceDate.getMinutes();
-    const currentDay = franceDate.getDay(); // 0 = Sunday, 1 = Monday, etc.
-    
-    // Log France time for debugging
-    console.log(`France time: ${currentHour}:${currentMinute}, Day: ${currentDay}`);
-    
-    // Only show time slots if we're within or approaching business hours
-    if (currentHour < 9 || currentHour >= 22) {
-      return [];
-    }
-    
-    // Define potential time slots
-    const potentialSlots = [
-      { value: '30min', label: 'Dans 30 minutes', minutes: 30 },
-      { value: '45min', label: 'Dans 45 minutes', minutes: 45 },
-      { value: '60min', label: 'Dans 1 heure', minutes: 60 },
-      { value: '90min', label: 'Dans 1h30', minutes: 90 },
-      { value: '120min', label: 'Dans 2 heures', minutes: 120 },
-    ];
-    
-    // Get admin settings for accurate closing times
+
+    // Generate next 7 days for pickup options
+    const dateOptions = [];
+
+    // Get admin settings for business hours
     const adminSettings = loadAdminSettings();
     const config = adminSettings.businessHours;
-    
-    // Determine restaurant closing time for today
-    let closingHour = 0;
-    let closingMinute = 0;
-    
-    // Is it Sunday?
-    if (currentDay === 0) {
-      // Use Sunday closing time from admin settings
-      const sundayClosing = config.sunday.closing;
-      closingHour = Math.floor(sundayClosing);
-      closingMinute = Math.round((sundayClosing - closingHour) * 60);
-    } else if (currentDay !== 1 && !config.closedDays.includes(currentDay)) {
-      // For other days, determine if we're in lunch or dinner service
-      if (currentHour < config.weekdays.lunch.closing) {
-        // Lunch service
-        const lunchClosing = config.weekdays.lunch.closing;
-        closingHour = Math.floor(lunchClosing);
-        closingMinute = Math.round((lunchClosing - closingHour) * 60);
+
+    // For today, we need special handling to only show valid times
+    const currentHour = franceDate.getHours();
+    const currentMinute = franceDate.getMinutes();
+
+    // Add dates for the next 7 days
+    for (let i = 0; i < 7; i++) {
+      const date = new Date(franceDate);
+      date.setDate(date.getDate() + i);
+      const day = date.getDay(); // 0 = Sunday, 1 = Monday, etc.
+
+      // Skip closed days (e.g., Monday)
+      if (config.closedDays.includes(day)) {
+        continue;
+      }
+
+      // Format date as "Aujourd'hui", "Demain", or day name
+      let dateLabel;
+      if (i === 0) {
+        dateLabel = "Aujourd'hui";
+      } else if (i === 1) {
+        dateLabel = "Demain";
       } else {
-        // Dinner service
-        const dinnerClosing = config.weekdays.dinner.closing;
-        closingHour = Math.floor(dinnerClosing);
-        closingMinute = Math.round((dinnerClosing - closingHour) * 60);
+        // Format as day name + date
+        const dayName = new Intl.DateTimeFormat('fr-FR', { weekday: 'long' }).format(date);
+        const dateNumber = date.getDate();
+        const month = new Intl.DateTimeFormat('fr-FR', { month: 'long' }).format(date);
+        dateLabel = `${dayName} ${dateNumber} ${month}`;
+      }
+
+      const dateString = date.toISOString().split('T')[0]; // YYYY-MM-DD
+
+      dateOptions.push({
+        value: dateString,
+        label: dateLabel,
+        day: day
+      });
+    }
+
+    return dateOptions;
+  };
+
+  const generateTimeSlots = (selectedDate: string) => {
+    // Get current time in France timezone regardless of user's location
+    const now = new Date();
+    const options = { timeZone: 'Europe/Paris' };
+    const franceDate = new Date(now.toLocaleString('en-US', options));
+
+    // Convert selected date to Date object
+    const pickupDate = new Date(selectedDate + 'T00:00:00');
+    const isToday = pickupDate.toDateString() === franceDate.toDateString();
+
+    // Get admin settings for business hours
+    const adminSettings = loadAdminSettings();
+    const config = adminSettings.businessHours;
+
+    // Get the day of week for the selected date
+    const day = pickupDate.getDay(); // 0 = Sunday, 1 = Monday, etc.
+
+    // Generate available time slots based on business hours
+    const timeSlots = [];
+
+    // Preparation time in minutes
+    const prepTime = 30;
+
+    // Current time plus prep time (for today only)
+    const currentHour = franceDate.getHours();
+    const currentMinute = franceDate.getMinutes();
+    const currentTimeInMinutes = (currentHour * 60) + currentMinute + prepTime;
+
+    // Generate time slots in 15-minute increments
+    if (day === 0) {
+      // Sunday hours
+      const openingHour = Math.floor(config.sunday.opening);
+      const openingMinute = Math.round((config.sunday.opening - openingHour) * 60);
+      const closingHour = Math.floor(config.sunday.closing);
+      const closingMinute = Math.round((config.sunday.closing - closingHour) * 60);
+
+      const openingTimeInMinutes = (openingHour * 60) + openingMinute;
+      const closingTimeInMinutes = (closingHour * 60) + closingMinute;
+
+      // Generate time slots every 15 minutes during business hours
+      for (let minutes = openingTimeInMinutes; minutes <= closingTimeInMinutes; minutes += 15) {
+        // For today, skip times that are already past + prep time
+        if (isToday && minutes < currentTimeInMinutes) {
+          continue;
+        }
+
+        const hour = Math.floor(minutes / 60);
+        const minute = minutes % 60;
+
+        const timeString = `${hour.toString().padStart(2, '0')}:${minute.toString().padStart(2, '0')}`;
+        timeSlots.push({
+          value: timeString,
+          label: timeString
+        });
+      }
+    } else if (!config.closedDays.includes(day)) {
+      // Weekday hours - separate lunch and dinner
+
+      // Lunch hours
+      const lunchOpeningHour = Math.floor(config.weekdays.lunch.opening);
+      const lunchOpeningMinute = Math.round((config.weekdays.lunch.opening - lunchOpeningHour) * 60);
+      const lunchClosingHour = Math.floor(config.weekdays.lunch.closing);
+      const lunchClosingMinute = Math.round((config.weekdays.lunch.closing - lunchClosingHour) * 60);
+
+      const lunchOpeningTimeInMinutes = (lunchOpeningHour * 60) + lunchOpeningMinute;
+      const lunchClosingTimeInMinutes = (lunchClosingHour * 60) + lunchClosingMinute;
+
+      // Generate lunch time slots every 15 minutes
+      for (let minutes = lunchOpeningTimeInMinutes; minutes <= lunchClosingTimeInMinutes; minutes += 15) {
+        // For today, skip times that are already past + prep time
+        if (isToday && minutes < currentTimeInMinutes) {
+          continue;
+        }
+
+        const hour = Math.floor(minutes / 60);
+        const minute = minutes % 60;
+
+        const timeString = `${hour.toString().padStart(2, '0')}:${minute.toString().padStart(2, '0')}`;
+        timeSlots.push({
+          value: timeString,
+          label: timeString
+        });
+      }
+
+      // Dinner hours
+      const dinnerOpeningHour = Math.floor(config.weekdays.dinner.opening);
+      const dinnerOpeningMinute = Math.round((config.weekdays.dinner.opening - dinnerOpeningHour) * 60);
+      const dinnerClosingHour = Math.floor(config.weekdays.dinner.closing);
+      const dinnerClosingMinute = Math.round((config.weekdays.dinner.closing - dinnerClosingHour) * 60);
+
+      const dinnerOpeningTimeInMinutes = (dinnerOpeningHour * 60) + dinnerOpeningMinute;
+      const dinnerClosingTimeInMinutes = (dinnerClosingHour * 60) + dinnerClosingMinute;
+
+      // Generate dinner time slots every 15 minutes
+      for (let minutes = dinnerOpeningTimeInMinutes; minutes <= dinnerClosingTimeInMinutes; minutes += 15) {
+        // For today, skip times that are already past + prep time
+        if (isToday && minutes < currentTimeInMinutes) {
+          continue;
+        }
+
+        const hour = Math.floor(minutes / 60);
+        const minute = minutes % 60;
+
+        const timeString = `${hour.toString().padStart(2, '0')}:${minute.toString().padStart(2, '0')}`;
+        timeSlots.push({
+          value: timeString,
+          label: timeString
+        });
       }
     }
-    
-    // Calculate minutes until closing
-    const closingTimeInMinutes = (closingHour * 60 + closingMinute) - (currentHour * 60 + currentMinute);
-    
-    // Filter out time slots that would exceed 30 minutes after closing
-    // We allow pickup up to 30 minutes after closing
-    const validSlots = potentialSlots.filter(slot => {
-      return slot.minutes <= (closingTimeInMinutes + 30);
-    });
-    
-    return validSlots;
+
+    return timeSlots;
   };
 
   return (
@@ -209,24 +306,45 @@ export default function Checkout() {
       
       {!showPaymentOptions ? (
         <form onSubmit={handleSubmit} className="card-cartoon p-6 space-y-6">
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Heure de retrait souhaitée
-            </label>
-            <select
-              className="w-full px-3 py-2 border-4 border-black rounded-xl"
-              value={orderDetails.pickupTime}
-              onChange={(e) => setOrderDetails({ ...orderDetails, pickupTime: e.target.value })}
-              required
-            >
-              <option value="">Choisir une heure de retrait</option>
-              <option value="ASAP">Dès que possible (~30 min)</option>
-              {generateTimeSlots().map(slot => (
-                <option key={slot.value} value={slot.value}>{slot.label}</option>
-              ))}
-            </select>
+          <div className="space-y-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Date de retrait
+              </label>
+              <select
+                className="w-full px-3 py-2 border-4 border-black rounded-xl"
+                value={orderDetails.pickupDate}
+                onChange={(e) => setOrderDetails({ ...orderDetails, pickupDate: e.target.value, pickupTime: '' })}
+                required
+              >
+                <option value="">Choisir une date</option>
+                {generatePickupOptions().map(option => (
+                  <option key={option.value} value={option.value}>{option.label}</option>
+                ))}
+              </select>
+            </div>
+
+            {orderDetails.pickupDate && (
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Heure de retrait
+                </label>
+                <select
+                  className="w-full px-3 py-2 border-4 border-black rounded-xl"
+                  value={orderDetails.pickupTime}
+                  onChange={(e) => setOrderDetails({ ...orderDetails, pickupTime: e.target.value })}
+                  required
+                >
+                  <option value="">Choisir une heure</option>
+                  {generateTimeSlots(orderDetails.pickupDate).map(slot => (
+                    <option key={slot.value} value={slot.value}>{slot.label}</option>
+                  ))}
+                </select>
+              </div>
+            )}
+
             <p className="text-sm text-gray-500 italic mt-1">
-              Préparation en 30 minutes environ après commande.
+              Préparation de votre commande pour le jour et l'heure choisis.
             </p>
           </div>
 
@@ -286,7 +404,7 @@ export default function Checkout() {
           <div className="space-y-4">
             <div className="bg-amber-100 p-4 rounded-xl border-4 border-black">
               <h4 className="font-bold text-amber-900 mb-2">Détails de la commande</h4>
-              <p><strong>Heure de retrait:</strong> {orderDetails.pickupTime}</p>
+              <p><strong>Date et heure de retrait:</strong> {orderDetails.pickupDate} à {orderDetails.pickupTime}</p>
               {orderDetails.notes && (
                 <p><strong>Instructions:</strong> {orderDetails.notes}</p>
               )}

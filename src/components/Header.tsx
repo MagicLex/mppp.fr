@@ -1,40 +1,18 @@
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { ShoppingCart, Clock, MapPin, AlertCircle } from 'lucide-react';
+import { ShoppingCart, Clock, MapPin } from 'lucide-react';
 import { useCart } from '../context/CartContext';
-import { isRestaurantOpen, getRestaurantStatus } from '../data/options';
+// import { isRestaurantOpen, getRestaurantStatus } from '../data/options';
 import { getFormattedBusinessHours } from '../data/adminConfig';
 
 export default function Header() {
   const { items } = useCart();
   const itemCount = items.reduce((sum, item) => sum + item.quantity, 0);
-  const [restaurantStatus, setRestaurantStatus] = useState(getRestaurantStatus());
   const location = useLocation();
-  
-  // Check if restaurant is open periodically
-  useEffect(() => {
-    // Check restaurant status immediately
-    setRestaurantStatus(getRestaurantStatus());
-    
-    // Set up an interval to check every minute
-    const interval = setInterval(() => {
-      setRestaurantStatus(getRestaurantStatus());
-    }, 60000); // 60 seconds
-    
-    return () => clearInterval(interval); // Clean up on unmount
-  }, []);
 
   return (
     <>
-      {/* Restaurant status banner */}
-      {!restaurantStatus.isOpen && (
-        <div className="bg-red-600 text-white py-2 px-4 text-center">
-          <div className="container mx-auto flex items-center justify-center">
-            <AlertCircle className="mr-2" size={18} />
-            <p className="text-sm font-medium">{restaurantStatus.message}</p>
-          </div>
-        </div>
-      )}
+      {/* Restaurant status banner removed - orders can be placed at any time */}
       
       <header className="relative overflow-visible">
         <div className="bg-gradient-to-b from-amber-400 to-amber-300 border-b-4 border-black">

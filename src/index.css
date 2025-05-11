@@ -90,4 +90,22 @@
   box-shadow: 4px 4px 0 #000;
 }
 
-/* Remove all custom toast styling */
+/* Force toasts to disappear immediately on unmount */
+.react-hot-toast-container {
+  position: fixed;
+  z-index: 9999;
+}
+
+/* Ensure toast transitions work correctly */
+.react-hot-toast {
+  transition: all 0.2s ease-out !important;
+}
+
+/* Speed up toast animation */
+[data-enter] {
+  animation-duration: 0.3s !important;
+}
+
+[data-leave] {
+  animation-duration: 0.2s !important;
+}

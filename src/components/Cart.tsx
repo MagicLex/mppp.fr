@@ -9,20 +9,8 @@ import { isRestaurantOpen, getRestaurantStatus } from '../data/options';
 export default function Cart() {
   const { items, updateQuantity, removeItem, removeOptionFromItem, addOptionToItem, total } = useCart();
   const [editingItemId, setEditingItemId] = useState<string | null>(null);
-  const [restaurantStatus, setRestaurantStatus] = useState(getRestaurantStatus());
-  
-  // Check if restaurant is open periodically
-  useEffect(() => {
-    // Check restaurant status immediately
-    setRestaurantStatus(getRestaurantStatus());
-    
-    // Set up an interval to check every minute
-    const interval = setInterval(() => {
-      setRestaurantStatus(getRestaurantStatus());
-    }, 60000); // 60 seconds
-    
-    return () => clearInterval(interval); // Clean up on unmount
-  }, []);
+  // We no longer check if restaurant is open
+  // Orders can be placed at any time for future pickup
 
   if (items.length === 0) {
     return (
@@ -48,68 +36,10 @@ export default function Cart() {
       <div className="bg-white rounded-lg shadow-md p-6">
         {items.map((item) => (
           <div key={item.product.id} className="py-4 border-b last:border-0">
+            {/* Mobile-first layout with improved readability */}
             <div className="flex flex-row">
-              {/* Left side: Product info, controls, and options */}
-              <div className="flex-1 pr-4 min-w-0">
-                <div className="flex justify-between items-start mb-4">
-                  <div>
-                    <div className="flex items-center">
-                      <h3 className="text-xl font-bold text-amber-900">{item.product.name}</h3>
-                      
-                      {/* Add options button - inline with product name */}
-                      <button 
-                        onClick={() => setEditingItemId(editingItemId === item.product.id ? null : item.product.id)}
-                        className="ml-3 py-1 px-3 rounded-md text-sm font-semibold border-2 bg-amber-400 border-amber-500 text-amber-900 hover:bg-amber-500 flex items-center"
-                      >
-                        {editingItemId === item.product.id ? 'Fermer' : 'Options +'}
-                      </button>
-                    </div>
-                    <p className="text-lg font-medium text-gray-800">{item.product.price.toFixed(2)}€</p>
-                    
-                    {/* Options pills */}
-                    {item.options && item.options.length > 0 && (
-                      <div className="flex flex-wrap gap-2 mt-2">
-                        {item.options.map(option => (
-                          <div key={option.id} className="inline-flex items-center bg-amber-100 rounded-full px-3 py-1 border border-amber-300">
-                            <span className="font-medium text-amber-900 text-sm">{option.name}</span>
-                            <span className="font-semibold text-amber-700 text-sm ml-1">+{option.price.toFixed(2)}€</span>
-                            <button 
-                              onClick={() => removeOptionFromItem(item.product.id, option.id)}
-                              className="ml-1 text-red-500 hover:text-red-700"
-                            >
-                              <X size={16} />
-                            </button>
-                          </div>
-                        ))}
-                      </div>
-                    )}
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <button
-                      onClick={() => updateQuantity(item.product.id, item.quantity - 1)}
-                      className="p-1.5 rounded-full hover:bg-gray-100 border-2 border-gray-300 z-10"
-                    >
-                      <Minus size={22} />
-                    </button>
-                    <span className="w-10 text-center text-lg font-semibold">{item.quantity}</span>
-                    <button
-                      onClick={() => updateQuantity(item.product.id, item.quantity + 1)}
-                      className="p-1.5 rounded-full hover:bg-gray-100 border-2 border-gray-300 z-10"
-                    >
-                      <Plus size={22} />
-                    </button>
-                    <button
-                      onClick={() => removeItem(item.product.id)}
-                      className="p-1.5 rounded-full hover:bg-gray-100 ml-2 border-2 border-gray-300 z-10"
-                    >
-                      <Trash2 size={22} className="text-red-500" />
-                    </button>
-                  </div>
-                </div>
-              </div>
-              
-              {/* Right side: Image or Icon */}
-              <div className="w-24 h-24 flex-shrink-0 bg-amber-50 rounded flex items-center justify-center">
+              {/* Left side: Product image */}
+              <div className="w-24 h-24 flex-shrink-0 bg-amber-50 rounded flex items-center justify-center mr-3">
                 {item.product.id.startsWith('option-') ? (
                   // Show appropriate icon based on option type
                   <div className="text-amber-600">
@@ -153,22 +83,93 @@ export default function Cart() {
                   />
                 )}
               </div>
-            </div>
-            
-            {/* Item total with options */}
-            <div className="mt-4 flex justify-between items-center">
-              {item.options && item.options.length > 0 ? (
-                <div className="text-base font-semibold text-gray-800">
-                  Sous-total: <span className="text-lg">{(
-                    (item.product.price + 
-                     item.options.reduce((sum, opt) => sum + opt.price, 0)) * 
-                    item.quantity
-                  ).toFixed(2)}€</span>
+
+              {/* Right side: Product info, restructured for better mobile readability */}
+              <div className="flex-1 min-w-0">
+                {/* Product name and unit price in clearer layout */}
+                <div className="flex flex-col space-y-1">
+                  <h3 className="text-xl font-bold text-amber-900 pr-2">{item.product.name}</h3>
+                  <div className="flex items-center">
+                    <span className="text-sm text-gray-500">Prix unitaire:</span>
+                    <span className="ml-2 text-base font-medium text-gray-800">{item.product.price.toFixed(2)}€</span>
+                  </div>
                 </div>
-              ) : (
-                <div></div>
-              )}
+
+                {/* Options pill display */}
+                {item.options && item.options.length > 0 && (
+                  <div className="flex flex-wrap gap-2 my-3 border-t border-gray-100 pt-2">
+                    {item.options.map(option => (
+                      <div key={option.id} className="inline-flex items-center bg-amber-100 rounded-full px-3 py-1 border border-amber-300">
+                        <span className="font-medium text-amber-900 text-sm">{option.name}</span>
+                        <span className="font-semibold text-amber-700 text-sm ml-1">+{option.price.toFixed(2)}€</span>
+                        <button
+                          onClick={() => removeOptionFromItem(item.product.id, option.id)}
+                          className="ml-1 text-red-500 hover:text-red-700"
+                        >
+                          <X size={16} />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+
+                {/* Clear separation for controls section */}
+                <div className="border-t border-gray-100 pt-3 mt-3">
+                  {/* Options button - more prominent */}
+                  <div className="mb-3">
+                    <button
+                      onClick={() => setEditingItemId(editingItemId === item.product.id ? null : item.product.id)}
+                      className="py-1.5 px-3 rounded-md text-sm font-semibold border-2 bg-amber-400 border-amber-500 text-amber-900 hover:bg-amber-500 flex items-center"
+                    >
+                      {editingItemId === item.product.id ? 'Fermer' : 'Options +'}
+                    </button>
+                  </div>
+
+                  {/* Two-row layout for mobile: controls on top, info below */}
+                  <div className="flex flex-col space-y-3 sm:flex-row sm:justify-between sm:items-center sm:space-y-0">
+                    {/* Quantity controls - more spacious for touch */}
+                    <div className="flex items-center">
+                      <div className="flex items-center bg-gray-50 rounded-lg border border-gray-200">
+                        <button
+                          onClick={() => updateQuantity(item.product.id, item.quantity - 1)}
+                          className="p-2 rounded-l-lg bg-gray-100 hover:bg-gray-200"
+                        >
+                          <Minus size={18} className="text-gray-700" />
+                        </button>
+                        <span className="w-10 text-center text-lg font-semibold">{item.quantity}</span>
+                        <button
+                          onClick={() => updateQuantity(item.product.id, item.quantity + 1)}
+                          className="p-2 rounded-r-lg bg-gray-100 hover:bg-gray-200"
+                        >
+                          <Plus size={18} className="text-gray-700" />
+                        </button>
+                      </div>
+
+                      {/* Delete button - positioned consistently */}
+                      <button
+                        onClick={() => removeItem(item.product.id)}
+                        className="ml-3 p-2 rounded-full bg-red-100 hover:bg-red-200 border border-red-300"
+                        aria-label="Supprimer"
+                      >
+                        <Trash2 size={18} className="text-red-500" />
+                      </button>
+                    </div>
+
+                    {/* Item subtotal - clear and prominent */}
+                    <div className="bg-amber-50 px-3 py-1.5 rounded-lg border border-amber-200 inline-flex items-center self-start">
+                      <span className="text-sm font-medium text-gray-700">Sous-total:</span>
+                      <span className="text-lg font-bold text-amber-900 ml-2">{(
+                        (item.product.price +
+                         (item.options ? item.options.reduce((sum, opt) => sum + opt.price, 0) : 0)) *
+                        item.quantity
+                      ).toFixed(2)}€</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
             </div>
+
+            {/* We don't need the duplicate total display as we've already got it in the layout above */}
             
             {/* Options editor */}
             {editingItemId === item.product.id && (
@@ -182,33 +183,25 @@ export default function Cart() {
             )}
           </div>
         ))}
-        <div className="mt-8 pt-6 border-t border-gray-300">
-          <div className="flex justify-between items-center text-2xl font-bold mb-6">
-            <span>Total</span>
-            <span className="text-amber-900">{total.toFixed(2)}€</span>
-          </div>
-          
-          {!restaurantStatus.isOpen ? (
-            <div className="bg-red-100 rounded-lg p-4 mb-4 border-2 border-red-300">
-              <div className="flex items-center mb-2">
-                <Clock className="text-red-600 mr-2" size={24} />
-                <h3 className="text-lg font-bold text-red-600">Restaurant fermé</h3>
-              </div>
-              <p className="text-red-700 text-sm">{restaurantStatus.message}</p>
+        <div className="mt-8 pt-6 border-t-4 border-amber-500">
+          {/* Prominent cart total - enhanced for mobile with clear visual hierarchy */}
+          <div className="bg-amber-100 rounded-lg p-4 border-2 border-amber-300 mb-6">
+            <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center">
+              <span className="text-lg font-bold text-gray-800 mb-1 sm:mb-0">Total de la commande</span>
+              <span className="text-3xl font-extrabold text-amber-900">{total.toFixed(2)}€</span>
             </div>
-          ) : null}
-          
+            <div className="mt-2 text-xs text-gray-500">
+              Prix TTC avec toutes les options
+            </div>
+          </div>
+
+          {/* Large, easy-to-tap checkout button with enhanced visual effects */}
           <Link
             to="/commander"
-            className={`block w-full py-4 px-4 rounded-lg text-center text-xl font-bold border-4 border-black transition-all ${
-              !restaurantStatus.isOpen 
-                ? 'bg-gray-400 cursor-not-allowed opacity-70 text-gray-700' 
-                : 'bg-amber-400 text-black hover:bg-amber-500'
-            }`}
-            style={{ boxShadow: restaurantStatus.isOpen ? '4px 4px 0 #000' : 'none' }}
-            onClick={(e) => !restaurantStatus.isOpen && e.preventDefault()}
+            className="block w-full py-5 px-4 rounded-xl text-center text-xl font-bold border-4 border-black transition-all bg-amber-400 text-black hover:bg-amber-500 active:translate-y-1 active:shadow-none"
+            style={{ boxShadow: '0 6px 0 #000' }}
           >
-            {restaurantStatus.isOpen ? 'Passer à la commande' : 'Commande indisponible'}
+            Passer à la commande
           </Link>
         </div>
       </div>
