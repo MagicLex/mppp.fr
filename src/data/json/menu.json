@@ -44,7 +44,7 @@
       "id": "sauce-piri-piri",
       "name": "Sauce Piri Piri 'Piquante'",
       "description": "Sauce piri-piri portugaise piquante pour une touche épicée et authentique (faite maison)",
-      "price": 1.99,
+      "price": 1.90,
       "image": "/images/menu/sauce_piripiri.jpeg",
       "category": "sauce",
       "displayOnHome": true,
@@ -54,7 +54,7 @@
       "id": "sauce-rouge",
       "name": "Sauce Rouge 'Non piquante'",
       "description": "Sauce rouge non piquante, c'est une version de la sauce piri-piri sans la chaleur du piment (faite maison)",
-      "price": 1.99,
+      "price": 1.90,
       "image": "/images/menu/sauce_rouge.jpeg",
       "category": "sauce",
       "displayOnHome": true,
@@ -64,7 +64,7 @@
       "id": "sauce-ail",
       "name": "Sauce ail et coriandre",
       "description": "Sauce ail et coriandre avec du caractère, touche fraîche et savoureuse (faite maison)",
-      "price": 1.99,
+      "price": 1.90,
       "image": "/images/menu/sauce_ail_non_piquante.jpeg",
       "category": "sauce",
       "displayOnHome": true,
@@ -215,21 +215,21 @@
         "id": "piri-piri-piquante",
         "name": "Sauce Piri Piri 'Piquante'",
         "description": "Notre sauce Piri Piri traditionnelle piquante, relevée avec des piments frais et des épices portugaises.",
-        "price": 1.99,
+        "price": 1.90,
         "type": "sauce"
       },
       {
         "id": "sauce-rouge",
         "name": "Sauce Rouge 'Non piquante'",
         "description": "Sauce douce et savoureuse à base de tomates et d'herbes, idéale pour ceux qui préfèrent éviter le piquant.",
-        "price": 1.99,
+        "price": 1.90,
         "type": "sauce"
       },
       {
         "id": "sauce-ail",
         "name": "Sauce Ail Confit 'Non piquante'",
         "description": "Sauce crémeuse et parfumée à l'ail confit, onctueuse et non piquante.",
-        "price": 1.99,
+        "price": 1.90,
         "type": "sauce"
       }
     ],
@@ -238,7 +238,7 @@
         "id": "pomme-terre-churras",
         "name": "Accompagnement Pomme de Terre churrasqueiro",
         "description": "Pommes de terre à la portugaise, préparées selon la recette traditionnelle des churrasqueiros.",
-        "price": 1.99,
+        "price": 1.90,
         "type": "side"
       }
     ],

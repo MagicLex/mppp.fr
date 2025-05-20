@@ -3,9 +3,9 @@ product,poulet-entier,Mon P'tit Poulet Entier,"Poulet jaune de Vendée façon ch
 product,demi-poulet,Mon P'tit 1/2 Poulet,"1/2 de Poulet jaune de Vendée façon churrasqueira, grillé au charbon de bois professionnel dans un barbecue Portugais idéal pour 2 personnes",12.9,/images/menu/poulet_demi.jpeg,main,TRUE,TRUE
 product,quart-poulet,Mon P'tit 1/4 Poulet,"1/4 de Poulet jaune de Vendée façon churrasqueira, grillé au charbon de bois professionnel dans un barbecue Portugais idéal pour 2 personnes",7.9,/images/menu/poulet_quart.jpeg,main,TRUE,TRUE
 product,pommes-de-terre,Pommes de Terre,"Pommes de terre grenailles cuites au barbecue, l'accompagnement idéal",1.9,/images/menu/pomme_de_terre.jpeg,side,TRUE,TRUE
-product,sauce-piri-piri,Sauce Piri Piri 'Piquante',"Sauce piri-piri portugaise piquante pour une touche épicée et authentique (faite maison)",1.99,/images/menu/sauce_piripiri.jpeg,sauce,TRUE,TRUE
-product,sauce-rouge,Sauce Rouge 'Non piquante',"Sauce rouge non piquante, c'est une version de la sauce piri-piri sans la chaleur du piment (faite maison)",1.99,/images/menu/sauce_rouge.jpeg,sauce,TRUE,TRUE
-product,sauce-ail,Sauce Ail Confit 'Non piquante',"Sauce ail et coriandre avec du caractère, touche fraîche et savoureuse (faite maison)",1.99,/images/menu/sauce_ail_non_piquante.jpeg,sauce,TRUE,TRUE
+product,sauce-piri-piri,Sauce Piri Piri 'Piquante',"Sauce piri-piri portugaise piquante pour une touche épicée et authentique (faite maison)",1.90,/images/menu/sauce_piripiri.jpeg,sauce,TRUE,TRUE
+product,sauce-rouge,Sauce Rouge 'Non piquante',"Sauce rouge non piquante, c'est une version de la sauce piri-piri sans la chaleur du piment (faite maison)",1.90,/images/menu/sauce_rouge.jpeg,sauce,TRUE,TRUE
+product,sauce-ail,Sauce Ail Confit 'Non piquante',"Sauce ail et coriandre avec du caractère, touche fraîche et savoureuse (faite maison)",1.90,/images/menu/sauce_ail_non_piquante.jpeg,sauce,TRUE,TRUE
 product,pastel-nata,Pastel de Nata 'Mon P'tit Flan' à l'unité,"Pastel de nata, dessert traditionnel portugais né du côté de Lisbonne au début du XVIII siècle",1.9,/images/menu/pastel_de_nata_unite.jpeg,dessert,TRUE,TRUE
 option,piri-piri-piquante,Sauce Piri Piri 'Piquante',Sauce piri-piri portugaise piquante pour une touche épicée et authentique (faite maison),1.9,,sauce,FALSE,FALSE
 option,sauce-rouge,Sauce Rouge 'Non piquante',"Sauce rouge non piquante, c'est une version de la sauce piri-piri sans la chaleur du piment (faite maison)",1.9,,sauce,FALSE,FALSE
