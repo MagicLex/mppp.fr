@@ -121,7 +121,7 @@ function App() {
       <CartProvider>
         <div className="min-h-screen bg-amber-50">
           {/* Show closed modal on all pages except admin */}
-          {adminSettings.isClosed && window.location.hash !== '#/admin1988' && (
+          {adminSettings.isClosed && !window.location.hash.includes('admin1988') && (
             <ClosedModal message={adminSettings.closedMessage} />
           )}
           <AnalyticsTracker />
