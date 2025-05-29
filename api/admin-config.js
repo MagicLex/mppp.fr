@@ -16,8 +16,8 @@ const ADMIN_PASSWORD_HASH = createHash('sha256').update(ADMIN_PASSWORD).digest('
 
 // Default config - should match the client-side defaults
 const DEFAULT_CONFIG = {
-  forceClose: false,
-  specialClosings: [],
+  isClosed: false,
+  closedMessage: '',
   businessHours: {
     weekdays: {
       lunch: {
@@ -83,6 +83,16 @@ export default async function handler(req, res) {
         settings = { ...DEFAULT_CONFIG };
       }
       
+      // Migrate old format if needed
+      if ('forceClose' in settings && !('isClosed' in settings)) {
+        settings.isClosed = settings.forceClose;
+        settings.closedMessage = '';
+        delete settings.forceClose;
+        delete settings.specialClosings;
+        // Save migrated settings
+        await writeSettings(settings);
+      }
+      
       return res.status(200).json({
         success: true,
         data: settings
@@ -118,9 +128,18 @@ export default async function handler(req, res) {
         });
       }
       
+      // Migrate old config format if needed
+      const migratedConfig = { ...config };
+      if ('forceClose' in migratedConfig && !('isClosed' in migratedConfig)) {
+        migratedConfig.isClosed = migratedConfig.forceClose;
+        migratedConfig.closedMessage = '';
+        delete migratedConfig.forceClose;
+        delete migratedConfig.specialClosings;
+      }
+      
       // Update config with metadata
       const updatedConfig = {
-        ...config,
+        ...migratedConfig,
         lastUpdated: new Date().toISOString(),
         updatedBy: email
       };

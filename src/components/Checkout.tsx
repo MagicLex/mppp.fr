@@ -7,6 +7,7 @@ import { createStripeCheckout } from '../services/stripeService';
 import { createOrUpdateContact } from '../services/hubspot';
 import { isRestaurantOpen, getRestaurantStatus } from '../data/options';
 import { isRestaurantOpenWithOverrides, getRestaurantStatusWithOverrides, loadAdminSettings } from '../data/adminConfig';
+import ClosedModal from './ClosedModal';
 
 export default function Checkout() {
   const navigate = useNavigate();
@@ -300,6 +301,12 @@ export default function Checkout() {
 
     return timeSlots;
   };
+
+  // Check if restaurant is closed (manual override)
+  const adminSettings = loadAdminSettings();
+  if (adminSettings.isClosed) {
+    return <ClosedModal message={adminSettings.closedMessage} />;
+  }
 
   return (
     <div className="max-w-2xl mx-auto space-y-6 mt-4">

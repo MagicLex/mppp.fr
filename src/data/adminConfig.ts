@@ -8,11 +8,9 @@ export interface SpecialClosing {
 }
 
 export interface AdminSettings {
-  // Overall status override
-  forceClose: boolean;
-  
-  // Special closings for specific dates
-  specialClosings: SpecialClosing[];
+  // Simple closed toggle with message
+  isClosed: boolean;
+  closedMessage: string;
   
   // Modified business hours
   businessHours: {
@@ -50,8 +48,8 @@ const ADMIN_SETTINGS_KEY = 'mpp_admin_settings';
 
 // Default settings based on restaurant config
 export const defaultAdminSettings: AdminSettings = {
-  forceClose: false,
-  specialClosings: [],
+  isClosed: false,
+  closedMessage: '',
   businessHours: {
     weekdays: {
       lunch: {
@@ -112,28 +110,11 @@ export function updateAdminSetting<K extends keyof AdminSettings>(
   return settings;
 }
 
-// Check if a specific date is in the special closings list
-export function isDateInSpecialClosings(date: Date): boolean {
+// Simple function to toggle closed status
+export function toggleClosedStatus(isClosed: boolean, message: string = ''): void {
   const settings = loadAdminSettings();
-  const dateString = date.toISOString().split('T')[0]; // Get YYYY-MM-DD
-  return settings.specialClosings.some(closing => closing.date === dateString);
-}
-
-// Add a special closing date
-export function addSpecialClosing(date: string, reason?: string): void {
-  const settings = loadAdminSettings();
-  // Check if date already exists
-  if (!settings.specialClosings.some(closing => closing.date === date)) {
-    settings.specialClosings.push({ date, reason });
-    settings.specialClosings.sort((a, b) => a.date.localeCompare(b.date));
-    saveAdminSettings(settings);
-  }
-}
-
-// Remove a special closing date
-export function removeSpecialClosing(date: string): void {
-  const settings = loadAdminSettings();
-  settings.specialClosings = settings.specialClosings.filter(closing => closing.date !== date);
+  settings.isClosed = isClosed;
+  settings.closedMessage = message;
   saveAdminSettings(settings);
 }
 
@@ -141,8 +122,8 @@ export function removeSpecialClosing(date: string): void {
 export function isRestaurantOpenWithOverrides(franceDate?: Date): boolean {
   const settings = loadAdminSettings();
   
-  // Force close overrides everything
-  if (settings.forceClose) {
+  // Simple closed check
+  if (settings.isClosed) {
     return false;
   }
   
@@ -151,12 +132,6 @@ export function isRestaurantOpenWithOverrides(franceDate?: Date): boolean {
   const options = { timeZone: 'Europe/Paris' };
   const franceDateObj = franceDate || new Date(now.toLocaleString('en-US', options));
   const currentDay = franceDateObj.getDay(); // 0 = Sunday, 1 = Monday, etc.
-  const dateString = franceDateObj.toISOString().split('T')[0]; // Get YYYY-MM-DD
-  
-  // Check for special closing
-  if (settings.specialClosings.some(closing => closing.date === dateString)) {
-    return false;
-  }
   
   // Check if it's a closed day
   if (settings.businessHours.closedDays.includes(currentDay)) {
@@ -251,25 +226,11 @@ export function getRestaurantStatusWithOverrides(): {isOpen: boolean; message: s
     `Dimanche: ${formatTimeDisplay(settings.businessHours.sunday.opening)}-${formatTimeDisplay(settings.businessHours.sunday.closing)} | ` +
     "Fermé le lundi";
   
-  // Force close overrides everything
-  if (settings.forceClose) {
+  // Simple closed check
+  if (settings.isClosed) {
     return {
       isOpen: false,
-      message: `Le restaurant est temporairement fermé. Horaires habituels: ${hoursText}`,
-      adminOverride: true
-    };
-  }
-  
-  // Check for special closing
-  const specialClosing = settings.specialClosings.find(closing => closing.date === dateString);
-  if (specialClosing) {
-    const message = specialClosing.reason 
-      ? `Le restaurant est exceptionnellement fermé aujourd'hui: ${specialClosing.reason}. Horaires habituels: ${hoursText}`
-      : `Le restaurant est exceptionnellement fermé aujourd'hui. Horaires habituels: ${hoursText}`;
-    
-    return {
-      isOpen: false,
-      message,
+      message: settings.closedMessage || `Le restaurant est temporairement fermé. Horaires habituels: ${hoursText}`,
       adminOverride: true
     };
   }

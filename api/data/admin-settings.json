@@ -1,6 +1,6 @@
 {
-  "forceClose": false,
-  "specialClosings": [],
+  "isClosed": false,
+  "closedMessage": "",
   "businessHours": {
     "weekdays": {
       "lunch": {
