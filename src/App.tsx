@@ -11,7 +11,7 @@ import ClosedModal from './components/ClosedModal';
 import { CartProvider, useCart } from './context/CartContext';
 import { trackPageView, trackPurchase } from './services/analytics';
 import { createDealForContact } from './services/hubspot';
-import { loadAdminSettings } from './data/adminConfig';
+import { fetchAdminConfig } from './services/adminService';
 // We'll import stripeService dynamically in the PaymentSuccess component
 
 // Analytics tracker component
@@ -97,15 +97,21 @@ function Footer() {
 }
 
 function App() {
-  const [adminSettings, setAdminSettings] = useState(loadAdminSettings());
+  const [adminSettings, setAdminSettings] = useState({ isClosed: false, closedMessage: '' });
   
-  // Check admin settings periodically
+  // Check admin settings from server
   useEffect(() => {
-    const checkSettings = () => {
-      setAdminSettings(loadAdminSettings());
+    const checkSettings = async () => {
+      try {
+        const config = await fetchAdminConfig();
+        setAdminSettings(config);
+      } catch (error) {
+        console.error('Failed to fetch admin config:', error);
+      }
     };
     
-    // Check every 30 seconds
+    // Check immediately and then every 30 seconds
+    checkSettings();
     const interval = setInterval(checkSettings, 30000);
     return () => clearInterval(interval);
   }, []);
