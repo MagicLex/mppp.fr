@@ -7,9 +7,11 @@ import Menu from './components/Menu';
 import Cart from './components/Cart';
 import Checkout from './components/Checkout';
 import Admin from './components/Admin';
+import ClosedModal from './components/ClosedModal';
 import { CartProvider, useCart } from './context/CartContext';
 import { trackPageView, trackPurchase } from './services/analytics';
 import { createDealForContact } from './services/hubspot';
+import { loadAdminSettings } from './data/adminConfig';
 // We'll import stripeService dynamically in the PaymentSuccess component
 
 // Analytics tracker component
@@ -95,10 +97,27 @@ function Footer() {
 }
 
 function App() {
+  const [adminSettings, setAdminSettings] = useState(loadAdminSettings());
+  
+  // Check admin settings periodically
+  useEffect(() => {
+    const checkSettings = () => {
+      setAdminSettings(loadAdminSettings());
+    };
+    
+    // Check every 30 seconds
+    const interval = setInterval(checkSettings, 30000);
+    return () => clearInterval(interval);
+  }, []);
+  
   return (
     <HashRouter>
       <CartProvider>
         <div className="min-h-screen bg-amber-50">
+          {/* Show closed modal on all pages except admin */}
+          {adminSettings.isClosed && window.location.hash !== '#/admin1988' && (
+            <ClosedModal message={adminSettings.closedMessage} />
+          )}
           <AnalyticsTracker />
           <HeaderWithRoute />
           <main className="container mx-auto px-4 pb-12">
