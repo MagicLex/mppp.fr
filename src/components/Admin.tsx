@@ -31,9 +31,11 @@ export default function Admin() {
   const [isLoading, setIsLoading] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   
-  // Initialize and load settings
+  // Initialize and load settings only after authentication
   useEffect(() => {
     const loadConfig = async () => {
+      if (!auth.isAuthenticated) return;
+      
       setIsLoading(true);
       try {
         const config = await fetchAdminConfig();
@@ -48,7 +50,7 @@ export default function Admin() {
     };
     
     loadConfig();
-  }, []);
+  }, [auth.isAuthenticated]);
   
   // Login handler
   const handleLogin = async (e: React.FormEvent) => {
