@@ -96,7 +96,9 @@ function Footer() {
   );
 }
 
-function App() {
+// Component to handle closed modal with router context
+function AppContent() {
+  const location = useLocation();
   const [adminSettings, setAdminSettings] = useState({ isClosed: false, closedMessage: '' });
   
   // Check admin settings from server
@@ -117,17 +119,15 @@ function App() {
   }, []);
   
   return (
-    <HashRouter>
-      <CartProvider>
-        <div className="min-h-screen bg-amber-50">
-          {/* Show closed modal on all pages except admin */}
-          {adminSettings.isClosed && !window.location.hash.includes('admin1988') && (
-            <ClosedModal message={adminSettings.closedMessage} />
-          )}
-          <AnalyticsTracker />
-          <HeaderWithRoute />
-          <main className="container mx-auto px-4 pb-12">
-            <Routes>
+    <div className="min-h-screen bg-amber-50">
+      {/* Show closed modal on all pages except admin */}
+      {adminSettings.isClosed && !location.pathname.includes('admin1988') && (
+        <ClosedModal message={adminSettings.closedMessage} />
+      )}
+      <AnalyticsTracker />
+      <HeaderWithRoute />
+      <main className="container mx-auto px-4 pb-12">
+        <Routes>
               <Route path="/" element={<Menu />} />
               <Route path="/panier" element={<Cart />} />
               <Route path="/commander" element={<Checkout />} />
@@ -166,9 +166,7 @@ function App() {
           />
           {/* Footer with local time */}
           <Footer />
-        </div>
-      </CartProvider>
-    </HashRouter>
+    </div>
   );
 }
 
@@ -517,6 +515,16 @@ function PaymentCancel() {
         </Link>
       </div>
     </div>
+  );
+}
+
+function App() {
+  return (
+    <HashRouter>
+      <CartProvider>
+        <AppContent />
+      </CartProvider>
+    </HashRouter>
   );
 }
 
