@@ -2,14 +2,13 @@
 import { createHash } from 'crypto';
 import { readSettings, writeSettings } from './utils/fileStorage.js';
 
-// Admin auth - from environment variables
-const ADMIN_EMAIL = process.env.ADMIN_EMAIL;
-const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD;
+// Admin auth - from environment variables with fallback
+const ADMIN_EMAIL = process.env.ADMIN_EMAIL || 'contact@mppp.fr';
+const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || '5qQ!5BHg$cig';
 
-// Check if credentials are available
-if (!ADMIN_EMAIL || !ADMIN_PASSWORD) {
-  console.error('ERROR: Admin credentials not found in environment variables');
-  throw new Error('Admin credentials must be set in environment variables');
+// Log warning if using fallback
+if (!process.env.ADMIN_EMAIL || !process.env.ADMIN_PASSWORD) {
+  console.warn('WARNING: Admin credentials not found in environment variables, using defaults');
 }
 
 const ADMIN_PASSWORD_HASH = createHash('sha256').update(ADMIN_PASSWORD).digest('hex');
