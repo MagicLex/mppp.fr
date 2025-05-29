@@ -130,6 +130,7 @@ export default async function handler(req, res) {
       // Migrate old config format if needed
       const migratedConfig = { ...config };
       if ('forceClose' in migratedConfig && !('isClosed' in migratedConfig)) {
+        console.log('Migrating old config format to new format');
         migratedConfig.isClosed = migratedConfig.forceClose;
         migratedConfig.closedMessage = '';
         delete migratedConfig.forceClose;
@@ -143,13 +144,22 @@ export default async function handler(req, res) {
         updatedBy: email
       };
       
-      // Save to file
-      const saveResult = await writeSettings(updatedConfig);
+      // Log the config being saved
+      console.log('Saving config:', JSON.stringify(updatedConfig, null, 2));
       
-      if (!saveResult) {
-        throw new Error('Failed to save settings to storage');
+      // Save to file
+      try {
+        const saveResult = await writeSettings(updatedConfig);
+        
+        if (!saveResult) {
+          throw new Error('writeSettings returned false');
+        }
+      } catch (saveError) {
+        console.error('Error saving settings:', saveError);
+        throw new Error(`Failed to save settings: ${saveError.message}`);
       }
       
+      console.log('Config saved successfully');
       return res.status(200).json({
         success: true,
         message: 'Configuration updated successfully',
@@ -157,10 +167,12 @@ export default async function handler(req, res) {
       });
     } catch (error) {
       console.error('Error updating admin config:', error);
+      console.error('Stack trace:', error.stack);
       return res.status(500).json({
         success: false,
         message: 'Error updating configuration',
-        error: error.message
+        error: error.message,
+        details: process.env.NODE_ENV === 'development' ? error.stack : undefined
       });
     }
   }
