@@ -99,7 +99,19 @@ function Footer() {
 // Component to handle closed modal with router context
 function AppContent() {
   const location = useLocation();
-  const [adminSettings, setAdminSettings] = useState({ isClosed: false, closedMessage: '' });
+  // Initialize with cached settings to prevent flash
+  const [adminSettings, setAdminSettings] = useState(() => {
+    try {
+      const cached = localStorage.getItem('mpp_admin_settings');
+      if (cached) {
+        const parsed = JSON.parse(cached);
+        return { isClosed: parsed.isClosed || false, closedMessage: parsed.closedMessage || '' };
+      }
+    } catch (e) {
+      console.error('Failed to load cached settings:', e);
+    }
+    return { isClosed: false, closedMessage: '' };
+  });
   
   // Check admin settings from server
   useEffect(() => {
