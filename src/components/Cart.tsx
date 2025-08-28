@@ -1,13 +1,14 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Minus, Plus, Trash2, X, ChevronDown, ChevronUp, Coffee, Utensils, Cookie, Clock } from 'lucide-react';
+import { Minus, Plus, Trash2, X, Coffee, Utensils, Cookie } from 'lucide-react';
 import { useCart } from '../context/CartContext';
+import { useCoupon } from '../context/CouponContext';
 import { OrderOption } from '../types';
 import ProductOptions from './ProductOptions';
-import { isRestaurantOpen, getRestaurantStatus } from '../data/options';
 
 export default function Cart() {
   const { items, updateQuantity, removeItem, removeOptionFromItem, addOptionToItem, total } = useCart();
+  const { couponCode, getDiscountedPrice, getDiscountAmount } = useCoupon();
   const [editingItemId, setEditingItemId] = useState<string | null>(null);
   // We no longer check if restaurant is open
   // Orders can be placed at any time for future pickup
@@ -186,13 +187,32 @@ export default function Cart() {
         <div className="mt-8 pt-6 border-t-4 border-amber-500">
           {/* Prominent cart total - enhanced for mobile with clear visual hierarchy */}
           <div className="bg-amber-100 rounded-lg p-4 border-2 border-amber-300 mb-6">
-            <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center">
-              <span className="text-lg font-bold text-gray-800 mb-1 sm:mb-0">Total de la commande</span>
-              <span className="text-3xl font-extrabold text-amber-900">{total.toFixed(2)}€</span>
-            </div>
-            <div className="mt-2 text-xs text-gray-500">
-              Prix TTC avec toutes les options
-            </div>
+            {couponCode ? (
+              <>
+                <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center mb-2">
+                  <span className="text-base text-gray-700 mb-1 sm:mb-0">Sous-total</span>
+                  <span className="text-xl text-gray-700">{total.toFixed(2)}€</span>
+                </div>
+                <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center mb-2 text-green-600">
+                  <span className="text-base font-semibold mb-1 sm:mb-0">Réduction ({couponCode})</span>
+                  <span className="text-xl font-semibold">-{getDiscountAmount(total).toFixed(2)}€</span>
+                </div>
+                <div className="border-t-2 border-amber-300 pt-2 flex flex-col sm:flex-row sm:justify-between sm:items-center">
+                  <span className="text-lg font-bold text-gray-800 mb-1 sm:mb-0">Total avec réduction</span>
+                  <span className="text-3xl font-extrabold text-amber-900">{getDiscountedPrice(total).toFixed(2)}€</span>
+                </div>
+              </>
+            ) : (
+              <>
+                <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center">
+                  <span className="text-lg font-bold text-gray-800 mb-1 sm:mb-0">Total de la commande</span>
+                  <span className="text-3xl font-extrabold text-amber-900">{total.toFixed(2)}€</span>
+                </div>
+                <div className="mt-2 text-xs text-gray-500">
+                  Prix TTC avec toutes les options
+                </div>
+              </>
+            )}
           </div>
 
           {/* Large, easy-to-tap checkout button with enhanced visual effects */}

@@ -12,6 +12,12 @@ export async function createStripeCheckout(
     console.log('Creating Stripe checkout for items:', items);
     console.log('Order details:', orderDetails);
     
+    // Get coupon code from localStorage if present
+    const couponCode = localStorage.getItem('mpp_coupon');
+    if (couponCode) {
+      console.log('Applying coupon code:', couponCode);
+    }
+    
     // For Vercel API routes
     const response = await fetch(`${window.location.origin}/api/create-checkout`, {
       method: 'POST',
@@ -22,6 +28,7 @@ export async function createStripeCheckout(
         items, 
         orderDetails,
         override: options?.override || false, // Pass override flag if provided
+        couponCode: couponCode || undefined, // Include coupon if present
       }),
     });
     

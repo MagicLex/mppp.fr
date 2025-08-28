@@ -1,16 +1,17 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useCart } from '../context/CartContext';
+import { useCoupon } from '../context/CouponContext';
 import toast from 'react-hot-toast';
 import { trackBeginCheckout } from '../services/analytics';
 import { createStripeCheckout } from '../services/stripeService';
-import { createOrUpdateContact } from '../services/hubspot';
-import { isRestaurantOpen, getRestaurantStatus } from '../data/options';
-import { isRestaurantOpenWithOverrides, getRestaurantStatusWithOverrides, loadAdminSettings } from '../data/adminConfig';
+import { getRestaurantStatus } from '../data/options';
+import { getRestaurantStatusWithOverrides, loadAdminSettings } from '../data/adminConfig';
 
 export default function Checkout() {
   const navigate = useNavigate();
   const { items, total } = useCart();
+  const { couponCode: contextCoupon, getDiscountedPrice, getDiscountAmount } = useCoupon();
   // Get today's date in YYYY-MM-DD format for default pickup date
   const today = new Date();
   const options = { timeZone: 'Europe/Paris' };
@@ -24,16 +25,15 @@ export default function Checkout() {
   });
   const [showPaymentOptions, setShowPaymentOptions] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
-  const [restaurantStatus, setRestaurantStatus] = useState(getRestaurantStatus());
   
   // Check if restaurant is open periodically
   useEffect(() => {
     // Check restaurant status immediately with admin overrides
-    setRestaurantStatus(getRestaurantStatusWithOverrides());
+    getRestaurantStatusWithOverrides();
     
     // Set up an interval to check every minute
     const interval = setInterval(() => {
-      setRestaurantStatus(getRestaurantStatusWithOverrides());
+      getRestaurantStatusWithOverrides();
     }, 60000); // 60 seconds
     
     return () => clearInterval(interval); // Clean up on unmount
@@ -147,8 +147,6 @@ export default function Checkout() {
     const config = adminSettings.businessHours;
 
     // For today, we need special handling to only show valid times
-    const currentHour = franceDate.getHours();
-    const currentMinute = franceDate.getMinutes();
 
     // Add dates for the next 7 days
     for (let i = 0; i < 7; i++) {
@@ -385,10 +383,27 @@ export default function Checkout() {
                 </div>
               ))}
             </div>
-            <div className="flex justify-between items-center text-xl font-bold mb-6">
-              <span>Total à payer</span>
-              <span className="price-tag">{total.toFixed(2)}€</span>
-            </div>
+            {contextCoupon ? (
+              <>
+                <div className="flex justify-between items-center text-base mb-2">
+                  <span>Sous-total</span>
+                  <span className="font-semibold">{total.toFixed(2)}€</span>
+                </div>
+                <div className="flex justify-between items-center text-base mb-2 text-green-600">
+                  <span>Réduction (-10%)</span>
+                  <span className="font-semibold">-{getDiscountAmount(total).toFixed(2)}€</span>
+                </div>
+                <div className="border-t-2 border-gray-300 pt-2 flex justify-between items-center text-xl font-bold mb-6">
+                  <span>Total à payer</span>
+                  <span className="price-tag">{getDiscountedPrice(total).toFixed(2)}€</span>
+                </div>
+              </>
+            ) : (
+              <div className="flex justify-between items-center text-xl font-bold mb-6">
+                <span>Total à payer</span>
+                <span className="price-tag">{total.toFixed(2)}€</span>
+              </div>
+            )}
             <button
               type="submit"
               className="w-full btn-cartoon bg-amber-400 text-black py-3 px-4 rounded-2xl text-lg border-4 border-black"

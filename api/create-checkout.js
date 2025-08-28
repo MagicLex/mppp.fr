@@ -210,7 +210,7 @@ export default async function handler(req, res) {
     // No longer checking if restaurant is currently open
     // Orders can be placed at any time for future pickup
     
-    const { items, orderDetails } = req.body;
+    const { items, orderDetails, couponCode } = req.body;
     
     // Validate pickup date and time are within business hours
     if (!override && orderDetails?.pickupDate && orderDetails?.pickupTime) {
@@ -313,8 +313,8 @@ export default async function handler(req, res) {
       order_time: new Date().toISOString(),
     };
     
-    // Create Stripe checkout session
-    const session = await stripe.checkout.sessions.create({
+    // Prepare checkout session configuration
+    const sessionConfig = {
       payment_method_types: ['card'],
       line_items: lineItems,
       mode: 'payment',
@@ -336,7 +336,38 @@ export default async function handler(req, res) {
           message: 'Vos coordonnées pour le retrait à 24 Rue des Olivettes, 44000 Nantes'
         },
       }
-    });
+    };
+    
+    // Map customer-facing codes to Stripe promotion code IDs
+    const COUPON_MAPPING = {
+      'RENTREE25': 'promo_1S15BlH5kcdNC8GwokswiA38',
+      'VIVELARENTREE': 'promo_1S16KfH5kcdNC8GwMGhc30Q4'
+    };
+    
+    // Apply coupon code if provided
+    if (couponCode) {
+      let promoCodeId = couponCode;
+      
+      // If it's a customer-facing code, map it to the Stripe ID
+      if (COUPON_MAPPING[couponCode.toUpperCase()]) {
+        promoCodeId = COUPON_MAPPING[couponCode.toUpperCase()];
+      }
+      
+      // Apply the promotion code if we have a valid ID
+      if (promoCodeId.startsWith('promo_')) {
+        sessionConfig.discounts = [{
+          promotion_code: promoCodeId
+        }];
+        console.log(`Applying promotion code: ${couponCode} (${promoCodeId})`);
+      } else {
+        // Unknown code, enable field for manual entry
+        sessionConfig.allow_promotion_codes = true;
+        console.log(`Unknown coupon code: ${couponCode}, enabling manual entry`);
+      }
+    }
+    
+    // Create Stripe checkout session
+    const session = await stripe.checkout.sessions.create(sessionConfig);
     
     res.status(200).json({ id: session.id, url: session.url });
   } catch (error) {

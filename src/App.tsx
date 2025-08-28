@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { HashRouter, Routes, Route, useLocation, Link, Navigate } from 'react-router-dom';
+import { HashRouter, Routes, Route, useLocation, Link } from 'react-router-dom';
 import { Toaster } from 'react-hot-toast';
 import Header from './components/Header';
 import CompactHeader from './components/CompactHeader';
@@ -8,7 +8,9 @@ import Cart from './components/Cart';
 import Checkout from './components/Checkout';
 import Admin from './components/Admin';
 import ClosedModal from './components/ClosedModal';
+import CouponBanner from './components/CouponBanner';
 import { CartProvider, useCart } from './context/CartContext';
+import { CouponProvider } from './context/CouponContext';
 import { trackPageView, trackPurchase } from './services/analytics';
 import { createDealForContact } from './services/hubspot';
 import { fetchAdminConfig } from './services/adminService';
@@ -113,6 +115,23 @@ function AppContent() {
     return { isClosed: false, closedMessage: '' };
   });
   
+  // Capture coupon code from URL params on any page load
+  useEffect(() => {
+    // Check for coupon in URL params
+    const searchParams = new URLSearchParams(window.location.search);
+    const couponCode = searchParams.get('coupon') || searchParams.get('promo_code') || searchParams.get('discount');
+    
+    if (couponCode && !localStorage.getItem('mpp_coupon')) {
+      // Store coupon in localStorage and reload to trigger context update
+      localStorage.setItem('mpp_coupon', couponCode);
+      console.log('Coupon code captured:', couponCode);
+      
+      // Clean URL and reload to trigger context
+      const cleanUrl = window.location.origin + window.location.pathname + window.location.hash.split('?')[0];
+      window.location.href = cleanUrl;
+    }
+  }, []); // Only check once on mount
+  
   // Check admin settings from server
   useEffect(() => {
     const checkSettings = async () => {
@@ -137,6 +156,7 @@ function AppContent() {
         <ClosedModal message={adminSettings.closedMessage} />
       )}
       <AnalyticsTracker />
+      <CouponBanner />
       <HeaderWithRoute />
       <main className="container mx-auto px-4 pb-12">
         <Routes>
@@ -533,9 +553,11 @@ function PaymentCancel() {
 function App() {
   return (
     <HashRouter>
-      <CartProvider>
-        <AppContent />
-      </CartProvider>
+      <CouponProvider>
+        <CartProvider>
+          <AppContent />
+        </CartProvider>
+      </CouponProvider>
     </HashRouter>
   );
 }
