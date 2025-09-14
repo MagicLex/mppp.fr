@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { HashRouter, Routes, Route, useLocation, Link } from 'react-router-dom';
+import { HashRouter, Routes, Route, useLocation, Link, useNavigate } from 'react-router-dom';
 import { Toaster } from 'react-hot-toast';
 import Header from './components/Header';
 import CompactHeader from './components/CompactHeader';
@@ -119,7 +119,10 @@ function AppContent() {
   // Block navigation to checkout if restaurant is closed
   useEffect(() => {
     if (adminSettings.isClosed && location.pathname === '/commander' && !location.pathname.includes('admin')) {
-      navigate('/panier');
+      // Navigate will work after refresh
+      if (typeof navigate !== 'undefined') {
+        navigate('/panier');
+      }
     }
   }, [adminSettings.isClosed, location.pathname, navigate]);
   

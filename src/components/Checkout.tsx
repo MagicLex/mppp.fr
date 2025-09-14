@@ -26,26 +26,53 @@ export default function Checkout() {
   const [showPaymentOptions, setShowPaymentOptions] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
   const [isRestaurantClosed, setIsRestaurantClosed] = useState(false);
+  const [showClosedAlert, setShowClosedAlert] = useState(false);
   
-  // Check if restaurant is closed and redirect if so
+  // Check if restaurant is closed on page load and periodically
   useEffect(() => {
-    const checkClosedStatus = () => {
-      const settings = loadAdminSettings();
-      const isClosed = settings.isClosed || false;
-      setIsRestaurantClosed(isClosed);
-
-      // If restaurant just closed, redirect back to cart
-      if (isClosed) {
-        toast.error('Le restaurant est fermé. Les commandes ne sont pas acceptées.', { duration: 5000 });
-        navigate('/panier');
+    // Check immediately on page load with fresh data
+    const checkInitialStatus = async () => {
+      try {
+        const config = await fetchAdminConfig();
+        if (config.isClosed) {
+          setIsRestaurantClosed(true);
+          setShowClosedAlert(true);
+          // Update localStorage
+          localStorage.setItem('mpp_admin_settings', JSON.stringify(config));
+        }
+      } catch (error) {
+        console.error('Failed to fetch admin config:', error);
+        // Fallback to localStorage
+        const settings = loadAdminSettings();
+        if (settings.isClosed) {
+          setIsRestaurantClosed(true);
+          setShowClosedAlert(true);
+        }
       }
     };
 
-    checkClosedStatus();
+    checkInitialStatus();
+
+    // Then check periodically with localStorage
+    const checkClosedStatus = () => {
+      const settings = loadAdminSettings();
+      const isClosed = settings.isClosed || false;
+      if (isClosed && !isRestaurantClosed) {
+        setIsRestaurantClosed(true);
+        setShowClosedAlert(true);
+      }
+    };
+
     // Check every 30 seconds
     const interval = setInterval(checkClosedStatus, 30000);
     return () => clearInterval(interval);
-  }, [navigate]);
+  }, [isRestaurantClosed]);
+
+  // Handle closed alert dismissal
+  const handleClosedAlertClose = () => {
+    setShowClosedAlert(false);
+    navigate('/panier');
+  };
 
   if (items.length === 0 || isRestaurantClosed) {
     navigate('/');
