@@ -1,17 +1,22 @@
 import React, { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { Minus, Plus, Trash2, X, Coffee, Utensils, Cookie } from 'lucide-react';
 import { useCart } from '../context/CartContext';
 import { useCoupon } from '../context/CouponContext';
 import { OrderOption } from '../types';
 import ProductOptions from './ProductOptions';
 import { loadAdminSettings } from '../data/adminConfig';
+import { fetchAdminConfig } from '../services/adminService';
+import ClosedAlert from './ClosedAlert';
 
 export default function Cart() {
+  const navigate = useNavigate();
   const { items, updateQuantity, removeItem, removeOptionFromItem, addOptionToItem, total } = useCart();
   const { couponCode, getDiscountedPrice, getDiscountAmount } = useCoupon();
   const [editingItemId, setEditingItemId] = useState<string | null>(null);
   const [isRestaurantClosed, setIsRestaurantClosed] = useState(false);
+  const [isCheckingStatus, setIsCheckingStatus] = useState(false);
+  const [showClosedAlert, setShowClosedAlert] = useState(false);
 
   // Check if restaurant is closed
   useEffect(() => {
@@ -25,6 +30,41 @@ export default function Cart() {
     const interval = setInterval(checkClosedStatus, 30000);
     return () => clearInterval(interval);
   }, [])
+
+  // Handle checkout button click with fresh status check
+  const handleCheckoutClick = async (e: React.MouseEvent) => {
+    e.preventDefault();
+    setIsCheckingStatus(true);
+
+    try {
+      // Fetch latest status from server
+      const config = await fetchAdminConfig();
+
+      if (config.isClosed) {
+        // Restaurant is closed, show alert
+        setIsRestaurantClosed(true);
+        setShowClosedAlert(true);
+        // Update localStorage for consistency
+        localStorage.setItem('mpp_admin_settings', JSON.stringify(config));
+      } else {
+        // Restaurant is open, proceed to checkout
+        navigate('/commander');
+      }
+    } catch (error) {
+      console.error('Failed to check restaurant status:', error);
+      // On error, check localStorage as fallback
+      const settings = loadAdminSettings();
+      if (settings.isClosed) {
+        setIsRestaurantClosed(true);
+        setShowClosedAlert(true);
+      } else {
+        // Proceed anyway if we can't verify
+        navigate('/commander');
+      }
+    } finally {
+      setIsCheckingStatus(false);
+    }
+  };
 
   if (items.length === 0) {
     return (
@@ -238,16 +278,24 @@ export default function Cart() {
               Restaurant fermé - Commande indisponible
             </button>
           ) : (
-            <Link
-              to="/commander"
-              className="block w-full py-5 px-4 rounded-xl text-center text-xl font-bold border-4 border-black transition-all bg-amber-400 text-black hover:bg-amber-500 active:translate-y-1 active:shadow-none"
+            <button
+              onClick={handleCheckoutClick}
+              disabled={isCheckingStatus}
+              className="block w-full py-5 px-4 rounded-xl text-center text-xl font-bold border-4 border-black transition-all bg-amber-400 text-black hover:bg-amber-500 active:translate-y-1 active:shadow-none disabled:opacity-50"
               style={{ boxShadow: '0 6px 0 #000' }}
             >
-              Passer à la commande
-            </Link>
+              {isCheckingStatus ? 'Vérification...' : 'Passer à la commande'}
+            </button>
           )}
         </div>
       </div>
+
+      {/* Closed alert modal */}
+      <ClosedAlert
+        isOpen={showClosedAlert}
+        onClose={() => setShowClosedAlert(false)}
+        message="Le restaurant vient de fermer. Les commandes ne sont plus acceptées pour le moment."
+      />
     </div>
   );
 }

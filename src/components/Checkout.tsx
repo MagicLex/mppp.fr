@@ -463,6 +463,13 @@ export default function Checkout() {
           </div>
         </div>
       )}
+
+      {/* Closed alert modal */}
+      <ClosedAlert
+        isOpen={showClosedAlert}
+        onClose={handleClosedAlertClose}
+        message="Le restaurant est actuellement fermé. Vous ne pouvez pas passer de commande pour le moment."
+      />
     </div>
   );
 }

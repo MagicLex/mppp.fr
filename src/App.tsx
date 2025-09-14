@@ -146,11 +146,23 @@ function AppContent() {
       try {
         const config = await fetchAdminConfig();
         setAdminSettings(config);
+        // Also update localStorage to keep all components in sync
+        localStorage.setItem('mpp_admin_settings', JSON.stringify(config));
       } catch (error) {
         console.error('Failed to fetch admin config:', error);
+        // On error, check localStorage for any updates from other components
+        try {
+          const cached = localStorage.getItem('mpp_admin_settings');
+          if (cached) {
+            const parsed = JSON.parse(cached);
+            setAdminSettings({ isClosed: parsed.isClosed || false, closedMessage: parsed.closedMessage || '' });
+          }
+        } catch (e) {
+          console.error('Failed to load cached settings:', e);
+        }
       }
     };
-    
+
     // Check immediately and then every 30 seconds
     checkSettings();
     const interval = setInterval(checkSettings, 30000);
