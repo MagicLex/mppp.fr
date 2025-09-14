@@ -1,17 +1,30 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { Minus, Plus, Trash2, X, Coffee, Utensils, Cookie } from 'lucide-react';
 import { useCart } from '../context/CartContext';
 import { useCoupon } from '../context/CouponContext';
 import { OrderOption } from '../types';
 import ProductOptions from './ProductOptions';
+import { loadAdminSettings } from '../data/adminConfig';
 
 export default function Cart() {
   const { items, updateQuantity, removeItem, removeOptionFromItem, addOptionToItem, total } = useCart();
   const { couponCode, getDiscountedPrice, getDiscountAmount } = useCoupon();
   const [editingItemId, setEditingItemId] = useState<string | null>(null);
-  // We no longer check if restaurant is open
-  // Orders can be placed at any time for future pickup
+  const [isRestaurantClosed, setIsRestaurantClosed] = useState(false);
+
+  // Check if restaurant is closed
+  useEffect(() => {
+    const checkClosedStatus = () => {
+      const settings = loadAdminSettings();
+      setIsRestaurantClosed(settings.isClosed || false);
+    };
+
+    checkClosedStatus();
+    // Check every 30 seconds for updates
+    const interval = setInterval(checkClosedStatus, 30000);
+    return () => clearInterval(interval);
+  }, [])
 
   if (items.length === 0) {
     return (
@@ -216,13 +229,23 @@ export default function Cart() {
           </div>
 
           {/* Large, easy-to-tap checkout button with enhanced visual effects */}
-          <Link
-            to="/commander"
-            className="block w-full py-5 px-4 rounded-xl text-center text-xl font-bold border-4 border-black transition-all bg-amber-400 text-black hover:bg-amber-500 active:translate-y-1 active:shadow-none"
-            style={{ boxShadow: '0 6px 0 #000' }}
-          >
-            Passer à la commande
-          </Link>
+          {isRestaurantClosed ? (
+            <button
+              disabled
+              className="block w-full py-5 px-4 rounded-xl text-center text-xl font-bold border-4 border-gray-400 bg-gray-300 text-gray-600 cursor-not-allowed"
+              style={{ boxShadow: '0 6px 0 #999' }}
+            >
+              Restaurant fermé - Commande indisponible
+            </button>
+          ) : (
+            <Link
+              to="/commander"
+              className="block w-full py-5 px-4 rounded-xl text-center text-xl font-bold border-4 border-black transition-all bg-amber-400 text-black hover:bg-amber-500 active:translate-y-1 active:shadow-none"
+              style={{ boxShadow: '0 6px 0 #000' }}
+            >
+              Passer à la commande
+            </Link>
+          )}
         </div>
       </div>
     </div>

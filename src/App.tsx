@@ -101,6 +101,7 @@ function Footer() {
 // Component to handle closed modal with router context
 function AppContent() {
   const location = useLocation();
+  const navigate = useNavigate();
   // Initialize with cached settings to prevent flash
   const [adminSettings, setAdminSettings] = useState(() => {
     try {
@@ -114,6 +115,13 @@ function AppContent() {
     }
     return { isClosed: false, closedMessage: '' };
   });
+
+  // Block navigation to checkout if restaurant is closed
+  useEffect(() => {
+    if (adminSettings.isClosed && location.pathname === '/commander' && !location.pathname.includes('admin')) {
+      navigate('/panier');
+    }
+  }, [adminSettings.isClosed, location.pathname, navigate]);
   
   // Capture coupon code from URL params on any page load
   useEffect(() => {

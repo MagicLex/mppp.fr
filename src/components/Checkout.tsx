@@ -25,21 +25,29 @@ export default function Checkout() {
   });
   const [showPaymentOptions, setShowPaymentOptions] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
+  const [isRestaurantClosed, setIsRestaurantClosed] = useState(false);
   
-  // Check if restaurant is open periodically
+  // Check if restaurant is closed and redirect if so
   useEffect(() => {
-    // Check restaurant status immediately with admin overrides
-    getRestaurantStatusWithOverrides();
-    
-    // Set up an interval to check every minute
-    const interval = setInterval(() => {
-      getRestaurantStatusWithOverrides();
-    }, 60000); // 60 seconds
-    
-    return () => clearInterval(interval); // Clean up on unmount
-  }, []);
+    const checkClosedStatus = () => {
+      const settings = loadAdminSettings();
+      const isClosed = settings.isClosed || false;
+      setIsRestaurantClosed(isClosed);
 
-  if (items.length === 0) {
+      // If restaurant just closed, redirect back to cart
+      if (isClosed) {
+        toast.error('Le restaurant est fermé. Les commandes ne sont pas acceptées.', { duration: 5000 });
+        navigate('/panier');
+      }
+    };
+
+    checkClosedStatus();
+    // Check every 30 seconds
+    const interval = setInterval(checkClosedStatus, 30000);
+    return () => clearInterval(interval);
+  }, [navigate]);
+
+  if (items.length === 0 || isRestaurantClosed) {
     navigate('/');
     return null;
   }

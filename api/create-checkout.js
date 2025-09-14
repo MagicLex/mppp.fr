@@ -92,11 +92,41 @@ async function isSpecialClosingDate(date) {
   }
 }
 
-// Get admin settings
+// Get admin settings from Redis if available
 async function getAdminSettings() {
   try {
-    // In serverless environment, use environment variables or default config
-    // We can't rely on file storage in Vercel Functions
+    // Try to get settings from Redis if available
+    if (process.env.REDIS_URL) {
+      const Redis = (await import('ioredis')).default;
+      const redis = new Redis(process.env.REDIS_URL, {
+        maxRetriesPerRequest: 1,
+        enableOfflineQueue: false,
+        connectTimeout: 5000
+      });
+
+      try {
+        const data = await redis.get('mpp:admin:settings');
+        await redis.quit();
+
+        if (data) {
+          const parsed = JSON.parse(data);
+          console.log('Admin settings loaded from Redis:', { isClosed: parsed.isClosed });
+          return {
+            forceClose: parsed.isClosed || false,
+            closedMessage: parsed.closedMessage || '',
+            specialClosings: [],
+            businessHours: parsed.businessHours || DEFAULT_CONFIG.businessHours,
+            preorderMinutes: parsed.preorderMinutes || DEFAULT_CONFIG.preorderMinutes,
+            lastOrderMinutes: parsed.lastOrderMinutes || DEFAULT_CONFIG.lastOrderMinutes
+          };
+        }
+      } catch (redisError) {
+        console.error('Redis error, using defaults:', redisError.message);
+        try { await redis.quit(); } catch {}
+      }
+    }
+
+    // Fall back to default config
     return DEFAULT_CONFIG;
   } catch (error) {
     console.error('Error getting admin settings:', error);
@@ -204,12 +234,20 @@ export default async function handler(req, res) {
   }
 
   try {
-    // Allow override for testing
+    // Allow override for admin testing only
     const override = req.query.override === 'true' || req.body.override === true;
-    
-    // No longer checking if restaurant is currently open
-    // Orders can be placed at any time for future pickup
-    
+
+    // CHECK: Verify restaurant is not force-closed before creating checkout
+    const adminSettings = await getAdminSettings();
+    if (!override && adminSettings.forceClose === true) {
+      console.log('BLOCKED: Restaurant is closed, rejecting checkout creation');
+      return res.status(403).json({
+        error: 'Restaurant fermé',
+        message: adminSettings.closedMessage || 'Le restaurant est actuellement fermé. Les commandes ne sont pas acceptées.',
+        code: 'RESTAURANT_CLOSED'
+      });
+    }
+
     const { items, orderDetails, couponCode } = req.body;
     
     // Validate pickup date and time are within business hours
