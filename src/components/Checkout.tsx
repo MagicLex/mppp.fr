@@ -7,6 +7,8 @@ import { trackBeginCheckout } from '../services/analytics';
 import { createStripeCheckout } from '../services/stripeService';
 import { getRestaurantStatus } from '../data/options';
 import { getRestaurantStatusWithOverrides, loadAdminSettings } from '../data/adminConfig';
+import { fetchAdminConfig } from '../services/adminService';
+import ClosedAlert from './ClosedAlert';
 
 export default function Checkout() {
   const navigate = useNavigate();
