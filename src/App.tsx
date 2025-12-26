@@ -237,7 +237,7 @@ function LegalNotice() {
         <p>SIRET : 93965543700019</p>
         <p>SIREN : 939655437</p>
         <p>Adresse du siège social : 8bis rue de la taunière 44860 Pont Saint Martin</p>
-        <p>Numéro de téléphone : 07 64 35 86 46</p>
+        <p>Numéro de téléphone : 06 68 85 18 03</p>
         <p>Email : contact@mppp.fr</p>
       </section>
       
@@ -319,7 +319,7 @@ function TermsAndConditions() {
         <h2 className="text-xl font-semibold mb-2">7. Service après-vente</h2>
         <p>Pour toute question relative à une commande ou pour signaler un problème, le client peut contacter Mon P'tit Poulet :</p>
         <ul className="list-disc pl-6 mt-2">
-          <li>Par téléphone au 07 64 35 86 46</li>
+          <li>Par téléphone au 06 68 85 18 03</li>
           <li>Par email à contact@mppp.fr</li>
           <li>Sur place au restaurant</li>
         </ul>

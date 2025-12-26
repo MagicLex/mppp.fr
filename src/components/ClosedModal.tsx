@@ -37,7 +37,7 @@ export default function ClosedModal({ message }: ClosedModalProps) {
         
         {/* Contact - smaller, less prominent */}
         <div className="mt-4 text-sm text-gray-500">
-          📞 09 82 31 66 11
+          📞 06 68 85 18 03
         </div>
       </div>
     </div>

@@ -484,7 +484,7 @@ export default function Checkout() {
                     Besoin d'aide avec votre commande?
                   </p>
                   <p className="text-sm font-bold mt-1">
-                    Appelez-nous au 07 64 35 86 46
+                    Appelez-nous au 06 68 85 18 03
                   </p>
                 </div>
               </div>
