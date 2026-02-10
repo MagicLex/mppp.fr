@@ -40,7 +40,7 @@ export default function ClosedAlert({ isOpen, onClose, message }: ClosedAlertPro
             <p className="text-sm text-amber-800">
               <strong>Horaires habituels:</strong><br />
               Mar-Sam: 11h-14h30 / 18h-22h<br />
-              Dimanche: 11h-21h
+              Dimanche: 12h-15h
             </p>
           </div>
         </div>

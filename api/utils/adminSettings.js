@@ -23,7 +23,7 @@ const DEFAULT_CONFIG = {
     },
     sunday: {
       opening: 12, // 12:00
-      closing: 21, // 21:00
+      closing: 15, // 15:00
     },
     closedDays: [1] // Monday is closed by default
   },

@@ -17,7 +17,7 @@ export const DEFAULT_RESTAURANT_CONFIG = {
     // Sunday has continuous hours
     sunday: {
       opening: 12, // 12:00
-      closing: 21, // 21:00
+      closing: 15, // 15:00
     },
     // Restaurant is closed on Monday
     closedDays: [1], // 0 = Sunday, 1 = Monday, etc.

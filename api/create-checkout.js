@@ -21,7 +21,7 @@ const DEFAULT_CONFIG = {
     },
     sunday: {
       opening: 12, // 12:00
-      closing: 21, // 21:00
+      closing: 15, // 15:00
     },
     closedDays: [1] // Monday is closed by default
   },
@@ -182,7 +182,7 @@ async function isRestaurantOpen() {
     const openTime = config.businessHours?.sunday?.opening || 
                      config.openingHours?.sunday?.opening || 12;
     const closeTime = config.businessHours?.sunday?.closing || 
-                      config.openingHours?.sunday?.closing || 21;
+                      config.openingHours?.sunday?.closing || 15;
     
     // Convert to decimal time for simpler comparison (e.g., 11:30 = 11.5)
     const currentDecimal = franceHour + (franceMinute / 60);

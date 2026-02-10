@@ -286,7 +286,7 @@ export default function Admin() {
         <h4 className="text-sm font-medium text-gray-700 mb-2">Horaires habituels</h4>
         <p className="text-xs text-gray-600">
           Mardi-Samedi: 11h-14h30 / 18h-22h<br />
-          Dimanche: 11h-21h<br />
+          Dimanche: 12h-15h<br />
           Fermé le lundi
         </p>
       </div>

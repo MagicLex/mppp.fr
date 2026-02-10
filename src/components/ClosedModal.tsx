@@ -31,7 +31,7 @@ export default function ClosedModal({ message }: ClosedModalProps) {
         <div className="mt-4 p-4 bg-amber-50 rounded-lg">
           <p className="text-sm text-gray-600">
             <span className="font-medium">Horaires habituels:</span><br />
-            Mar-Sam: 11h-14h30 / 18h-22h • Dim: 11h-21h
+            Mar-Sam: 11h-14h30 / 18h-22h • Dim: 12h-15h
           </p>
         </div>
         

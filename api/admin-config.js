@@ -16,7 +16,7 @@ const defaultSettings = {
       lunch: { opening: 12, closing: 14 },
       dinner: { opening: 19, closing: 21 }
     },
-    sunday: { opening: 12, closing: 21 },
+    sunday: { opening: 12, closing: 15 },
     closedDays: [1]
   },
   preorderMinutes: 30,
